@@ -110,11 +110,37 @@ exports.registerUser = async (req, res) => {
           user.id
         );
      
+      }else{
+        
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: "Oladitisodiq@gmail.com",
+            pass: "pbymupdgbsvlndrt",
+          },
+        });
+    
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: 'Email Verification',
+          text: `Your verification code is: ${verificationCode}`,
+        };
+    
+        await transporter.sendMail(mailOptions);
+        return sendResponse(
+          res,
+          201,
+          'success',
+          'User registered. Check your email for verification code.',
+          null
+        );
+        
       }
 
     }else{
       const newUser = new User({  email, verificationCode });
-    await newUser.save();
+     await newUser.save();
 
     // Send Verification Email
     const transporter = nodemailer.createTransport({
