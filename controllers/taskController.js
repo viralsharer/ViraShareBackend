@@ -1,5 +1,7 @@
 // backend/controllers/taskController.js
 const Task = require('../models/Task');
+const User = require('../models/User');
+const TaskLog = require('../models/TaskLog');
 const SocialPlatform = require('../models/SocialPlatform');
 const EngagementType = require('../models/EngagementType');
 
@@ -360,5 +362,89 @@ exports.deleteTask = async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
+  }
+};
+
+
+exports.performTask = async (req, res) => {
+  try {
+      const task = await Task.findById(req.params.taskId);
+      if (!task) {
+          return res.status(404).json({ status: 'error', message: 'Task not found' });
+      }
+
+      const user = await User.findById(req.user.id);
+      if (!user) {
+          return res.status(404).json({ status: 'error', message: 'User not found' });
+      }
+
+      // Check if task is already performed
+      const existingLog = await TaskLog.findOne({ userId: user.id, taskId: task.id, status: 'pending' });
+      if (existingLog) {
+          return res.status(400).json({ status: 'error', message: 'Task already performed, awaiting approval' });
+      }
+
+      // Create Task Log
+      await TaskLog.create({
+          userId: user.id,
+          taskId: task.id,
+          amount: task.taskPrice,
+          status: 'pending'
+      });
+
+      // Add to temporary balance
+      user.temporaryBalance += task.taskPrice;
+      await user.save();
+
+      res.json({
+          status: 'success',
+          message: `Task performed. Task price of ${task.taskPrice} added to temporary balance.`,
+          data: { temporaryBalance: user.temporaryBalance }
+      });
+
+  } catch (error) {
+      console.error('Error performing task:', error);
+      res.status(500).json({ status: 'error', message: 'Server error' });
+  }
+};
+
+exports.reviewTask = async (req, res) => {
+  try {
+      const { taskLogId, action } = req.body; // action: 'confirm' or 'reject'
+
+      const taskLog = await TaskLog.findById(taskLogId).populate('userId');
+      if (!taskLog) {
+          return res.status(404).json({ status: 'error', message: 'Task log not found' });
+      }
+
+      if (taskLog.status !== 'pending') {
+          return res.status(400).json({ status: 'error', message: 'Task already reviewed' });
+      }
+
+      const user = taskLog.userId;
+
+      if (action === 'confirm') {
+          // Move balance to main balance
+          user.mainBalance += taskLog.amount;
+          user.temporaryBalance -= taskLog.amount;
+          taskLog.status = 'confirmed';
+      } else if (action === 'reject') {
+          // Deduct from temporary balance
+          user.temporaryBalance -= taskLog.amount;
+          taskLog.status = 'rejected';
+      }
+
+      await user.save();
+      await taskLog.save();
+
+      res.json({
+          status: 'success',
+          message: `Task ${action}ed successfully.`,
+          data: { mainBalance: user.mainBalance, temporaryBalance: user.temporaryBalance }
+      });
+
+  } catch (error) {
+      console.error('Error reviewing task:', error);
+      res.status(500).json({ status: 'error', message: 'Server error' });
   }
 };

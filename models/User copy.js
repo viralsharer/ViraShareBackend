@@ -3,14 +3,25 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
 
+  provider: {
+    type: String,
+    enum: ['discord', 'twitter'],
+    required: null,
+  },
+  providerId: {
+    type: String,
+    required: null,
+    unique: true,
+  },
 
   photo: {
-    type: String
+    type: String,
+    required: null,
   },
 
   name: {
-    type: String
-
+    type: String,
+    required: null,
   },
   email: {
     type: String,
@@ -19,13 +30,12 @@ const UserSchema = new mongoose.Schema({
     lowercase: true,
   },
   password: {
-    type: String
-
+    type: String,
+    required: null,
   },
   referral: { type: String },
-  referralCode: { type: String },
-  mainBalance: { type: Number, default: 0 },
-  temporaryBalance: { type: Number, default: 0 },
+  referralCode: { type: String, unique: true },
+  balance: { type: Number, default: 0 },
   isVerified: { type: Boolean, default: false },
   verificationCode: { type: String, default: null },
 }, { timestamps: true });

@@ -11,7 +11,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 // router.post('/signup', signup);
 
 // @route   POST /api/auth/login
-// router.post('/login', login);
+router.post('/login', login);
 
 // User Registration
 router.post('/register', registerUser);
@@ -28,9 +28,9 @@ router.get('/', (req, res) => {
 });
 
 // Example login route
-router.get('/login', (req, res) => {
-    res.send('Please log in.');
-});
+// router.get('/login', (req, res) => {
+//     res.send('Please log in.');
+// });
 
 console.log(passport);
 router.get('/twitter', passport.authenticate('twitter'));

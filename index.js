@@ -41,6 +41,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/admin', require('./routes/adminRoute'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/engagement-types', require('./routes/engagementTypeRoutes'));
 

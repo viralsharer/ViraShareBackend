@@ -6,28 +6,30 @@ const {
   getTasks,
   getLoggedInUserTasks,
   getTaskById,
+  reviewTask,
+  performTask,
   updateTask,
   deleteTask,
 } = require('../controllers/taskController');
 const authMiddleware = require('../middleware/authMiddleware');
+const adminAuth = require('../middleware/adminMiddleware');
 
-// @route   POST /api/tasks
-router.post('/', authMiddleware, createTask);
+// Public/User Routes
+router.post('/', authMiddleware, createTask); // Create a task (User)
+router.get('/getMyTask', authMiddleware, getLoggedInUserTasks); // Get logged-in user's tasks
+router.get('/:id', authMiddleware, getTaskById); // Get a single task by ID
+router.post('/perform/:taskId', authMiddleware, performTask); 
+router.get('/', authMiddleware, getTasks); // Get all tasks (Admin)
+ 
 
-// @route   GET /api/tasks
-router.get('/', authMiddleware, getTasks);
 
 
-// @route   GET /api/tasks
-router.get('/getMyTask', authMiddleware, getLoggedInUserTasks);
+// Admin Routes
+router.get('/', adminAuth, getTasks); // Get all tasks (Admin)
+router.put('/:id', adminAuth, updateTask); // Update task (Admin)
+router.delete('/:id', adminAuth, deleteTask); // Delete task (Admin)
+router.post('/review/', adminAuth, reviewTask); 
 
-// @route   GET /api/tasks/:id
-router.get('/:id', authMiddleware, getTaskById);
-
-// @route   PUT /api/tasks/:id
-router.put('/:id', authMiddleware, updateTask);
-
-// @route   DELETE /api/tasks/:id
-router.delete('/:id', authMiddleware, deleteTask);
+// performTask 
 
 module.exports = router;

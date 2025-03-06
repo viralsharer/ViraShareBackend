@@ -1,4 +1,3 @@
-// controllers/SocialPlatformController.js
 const SocialPlatform = require('../models/SocialPlatform');
 
 // Create a new Social Platform type
@@ -12,7 +11,7 @@ exports.createSocialPlatform = async (req, res) => {
         data: null,
       });
     }
-    
+
     const socialPlatform = new SocialPlatform({ name });
     await socialPlatform.save();
     return res.status(201).json({
@@ -22,112 +21,130 @@ exports.createSocialPlatform = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("Error creating Social Platform:", error);
     return res.status(500).json({
       status: 'error',
-      message: 'Error fetching Social Platform types.',
-      data: "",
+      message: 'Error creating Social Platform.',
+      data: null,
     });
   }
 };
 
-// Get all Social Platform types
+// Get all Social Platforms
 exports.getSocialPlatforms = async (req, res) => {
   try {
     const socialPlatforms = await SocialPlatform.find();
     return res.status(200).json({
       status: 'success',
-      message: 'Social Platform Retrieved successfully.',
+      message: 'Social Platforms retrieved successfully.',
       data: socialPlatforms,
     });
-    // res.status(200).json(SocialPlatforms);
+
   } catch (error) {
-  
+    console.error("Error fetching Social Platforms:", error);
     return res.status(500).json({
       status: 'error',
-      message: 'Error fetching Social Platform types.',
-      data: "",
+      message: 'Error fetching Social Platforms.',
+      data: null,
     });
   }
 };
 
-// Get an Social Platform type by ID
+// Get a Social Platform by ID
 exports.getSocialPlatformById = async (req, res) => {
   try {
     const socialPlatform = await SocialPlatform.findById(req.params.id);
-    if (!socialPlatform) 
-      return res.status(404).json({ 
+    if (!socialPlatform) {
+      return res.status(404).json({
         status: 'error',
-        message: 'Social Platform type not found.',
-        data: ""
-       });
+        message: 'Social Platform not found.',
+        data: null,
+      });
+    }
+
     return res.status(200).json({
       status: 'success',
-      message: 'Social Platform Retrieved successfully.',
+      message: 'Social Platform retrieved successfully.',
       data: socialPlatform,
     });
-    // res.status(200).json(SocialPlatform);
+
   } catch (error) {
-      return res.status(500).json({
-        status: 'error',
-        message: 'Error fetching Social Platform types.',
-        data: "",
-      });
+    console.error("Error fetching Social Platform by ID:", error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error fetching Social Platform.',
+      data: null,
+    });
   }
 };
 
-// Update an Social Platform type
+// Update a Social Platform
 exports.updateSocialPlatform = async (req, res) => {
   try {
     const { name } = req.body;
-    const socialPlatform = await SocialPlatform.findByIdAndUpdate(
-      req.params.id, { name }, { new: true }
-    );
-    if (!socialPlatform) 
-      return res.status(404).json({ 
-      status: 'error',
-      message: 'Social Platform type not found.',
-      data: ""
-     });
+    if (!name) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Name is required.',
+        data: null,
+      });
+    }
 
-     return res.status(200).json({
+    const socialPlatform = await SocialPlatform.findByIdAndUpdate(
+      req.params.id,
+      { name },
+      { new: true }
+    );
+
+    if (!socialPlatform) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Social Platform not found.',
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
       status: 'success',
-      message: 'Social Platform Updated successfully.',
+      message: 'Social Platform updated successfully.',
       data: socialPlatform,
     });
-   
+
   } catch (error) {
+    console.error("Error updating Social Platform:", error);
     return res.status(500).json({
       status: 'error',
-      message: 'Error fetching Social Platform types.',
-      data: "",
+      message: 'Error updating Social Platform.',
+      data: null,
     });
   }
 };
 
-// Delete an Social Platform type
+// Delete a Social Platform
 exports.deleteSocialPlatform = async (req, res) => {
   try {
     const socialPlatform = await SocialPlatform.findByIdAndDelete(req.params.id);
 
-    if (!socialPlatform)
-
-      return res.status(404).json({ 
+    if (!socialPlatform) {
+      return res.status(404).json({
         status: 'error',
-        message: 'Social Platform type not found.',
-        data: ""
+        message: 'Social Platform not found.',
+        data: null,
       });
+    }
 
-      return res.status(200).json({
-        status: 'success',
-        message: 'Social Platform type deleted.',
-        data: "",
-      });
+    return res.status(200).json({
+      status: 'success',
+      message: 'Social Platform deleted successfully.',
+      data: socialPlatform, // Optional: return the deleted object
+    });
 
   } catch (error) {
+    console.error("Error deleting Social Platform:", error);
     return res.status(500).json({
       status: 'error',
-      message: 'Error fetching Social Platform types.',
-      data: "",
+      message: 'Error deleting Social Platform.',
+      data: null,
     });
   }
 };
