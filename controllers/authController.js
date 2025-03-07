@@ -13,17 +13,37 @@ const { sendResponse } = require('../utils/responseHelper');
 // @route   POST /api/auth/signup
 // @access  Public
 exports.signup = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone, referralCode } = req.body;
+
+  // Validate fields
+  if (!name || !email || !password || !phone) {
+    return sendResponse(res, 400, 'error', 'All fields except referralCode are required', null);
+  }
 
   try {
-    // Check if user exists
-    let user = await User.findOne({ email });
+    // Check if email or phone already exists
+    let user = await User.findOne({ $or: [{ email }, { phone }] });
     if (user) {
-      return sendResponse(res, 400, 'error', 'User already exists', null);
+      return sendResponse(res, 400, 'error', 'Email or phone already exists', null);
+    }
+
+    // Find referrer if referralCode is provided
+    let referrer = null;
+    if (referralCode) {
+      referrer = await User.findOne({ referralCode });
+      if (!referrer) {
+        return sendResponse(res, 400, 'error', 'Invalid referral code', null);
+      }
     }
 
     // Create new user
-    user = new User({ name, email, password });
+    user = new User({
+      name,
+      email,
+      password,
+      phone,
+      referral: referrer ? referrer._id : null, // Store referrer ID if exists
+    });
 
     // Hash password
     const salt = await bcrypt.genSalt(10);

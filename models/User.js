@@ -1,5 +1,6 @@
 // backend/models/User.js
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 
 const UserSchema = new mongoose.Schema({
 
@@ -22,12 +23,26 @@ const UserSchema = new mongoose.Schema({
     type: String
 
   },
-  referral: { type: String },
-  referralCode: { type: String },
+  referral: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Reference to the user who referred them
+    default: null,
+  },
+  referralCode: {
+    type: String,
+    unique: true,
+  },
   mainBalance: { type: Number, default: 0 },
   temporaryBalance: { type: Number, default: 0 },
   isVerified: { type: Boolean, default: false },
   verificationCode: { type: String, default: null },
 }, { timestamps: true });
+
+UserSchema.pre('save', async function (next) {
+  if (!this.referralCode) {
+    this.referralCode = uuidv4().slice(0, 8); // Generate a short unique code
+  }
+  next();
+});
 
 module.exports = mongoose.model('User', UserSchema);
