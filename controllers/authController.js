@@ -52,7 +52,7 @@ exports.registerOrSignupUser = async (req, res) => {
         return sendResponse(res, 200, 'success', 'Email already verified.', null, user.id);
       } else {
         // Resend verification email
-        concole.log(verificationCode);
+        console.log(verificationCode);
         user.verificationCode = verificationCode;
         await user.save();
 
