@@ -36,7 +36,7 @@ exports.registerOrSignupUser = async (req, res) => {
   const { name, email, password, phone, referralCode } = req.body;
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 
-  concole.log(verificationCode);
+  console.log(verificationCode);
 
   // Validate required fields
   if (!name || !email || !password || !phone) {
