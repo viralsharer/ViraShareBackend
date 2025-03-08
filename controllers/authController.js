@@ -50,6 +50,10 @@ exports.registerOrSignupUser = async (req, res) => {
         return sendResponse(res, 200, 'success', 'Email already verified.', null, user.id);
       } else {
         // Resend verification email
+
+        user.verificationCode = verificationCode;
+        await user.save();
+        
         await sendVerificationEmail(email, verificationCode);
         return sendResponse(res, 200, 'success', 'Verification email resent.', null);
       }
