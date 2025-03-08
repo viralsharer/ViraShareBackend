@@ -14,7 +14,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/login', login);
 
 // User Registration
-router.post('/register', registerUser);
+router.post('/register', registerOrSignupUser);
 
 // Email Verification
 router.post('/verify-email', verifyEmail);

@@ -12,22 +12,50 @@ const { sendResponse } = require('../utils/responseHelper');
 // @desc    Register new user
 // @route   POST /api/auth/signup
 // @access  Public
-exports.signup = async (req, res) => {
-  const { name, email, password, phone, referralCode } = req.body;
+const sendVerificationEmail = async (email, verificationCode) => {
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, // Use environment variables for security
+    },
+  });
 
-  // Validate fields
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Email Verification',
+    text: `Your verification code is: ${verificationCode}`,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+// Unified User Registration & Signup
+exports.registerOrSignupUser = async (req, res) => {
+  const { name, email, password, phone, referralCode } = req.body;
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+
+  // Validate required fields
   if (!name || !email || !password || !phone) {
     return sendResponse(res, 400, 'error', 'All fields except referralCode are required', null);
   }
 
   try {
-    // Check if email or phone already exists
+    // Check if the user already exists
     let user = await User.findOne({ $or: [{ email }, { phone }] });
+
     if (user) {
-      return sendResponse(res, 400, 'error', 'Email or phone already exists', null);
+      if (user.isVerified) {
+        return sendResponse(res, 200, 'success', 'Email already verified.', null, user.id);
+      } else {
+        // Resend verification email
+        await sendVerificationEmail(email, verificationCode);
+        return sendResponse(res, 200, 'success', 'Verification email resent.', null);
+      }
     }
 
-    // Find referrer if referralCode is provided
+    // Validate referral code (if provided)
     let referrer = null;
     if (referralCode) {
       referrer = await User.findOne({ referralCode });
@@ -42,7 +70,8 @@ exports.signup = async (req, res) => {
       email,
       password,
       phone,
-      referral: referrer ? referrer._id : null, // Store referrer ID if exists
+      referral: referrer ? referrer._id : null, // Store referrer ID if valid
+      verificationCode,
     });
 
     // Hash password
@@ -51,14 +80,10 @@ exports.signup = async (req, res) => {
 
     await user.save();
 
-    return sendResponse(
-      res,
-      201,
-      'success',
-      'User registered successfully',
-      null,
-      user.id
-    );
+    // Send verification email
+    await sendVerificationEmail(email, verificationCode);
+
+    return sendResponse(res, 201, 'success', 'User registered. Check your email for verification code.', null, user.id);
   } catch (err) {
     console.error(err.message);
     return sendResponse(res, 500, 'error', 'Server error', null);
@@ -118,94 +143,7 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// User Registration
-exports.registerUser = async (req, res) => {
-  const  { name, email, password } = req.body;
-  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 
-  try {
-
-    let user = await User.findOne({ email });
-
-    if (user) {
-      if (user.isVerified) {
-        return sendResponse(
-          res,
-          200,
-          'success',
-          'Email already verified.',
-          null,
-          user.id
-        );
-     
-      }else{
-        
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: "Oladitisodiq@gmail.com",
-            pass: "pbymupdgbsvlndrt",
-          },
-        });
-    
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: email,
-          subject: 'Email Verification',
-          text: `Your verification code is: ${verificationCode}`,
-        };
-    
-        await transporter.sendMail(mailOptions);
-        return sendResponse(
-          res,
-          201,
-          'success',
-          'User registered. Check your email for verification code.',
-          null
-        );
-        
-      }
-
-    }else{
-      const newUser = new User({  name,password,email, verificationCode });
-     
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      newUser.password = await bcrypt.hash(password, salt);
-      await newUser.save();
-
-    // Send Verification Email
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: "Oladitisodiq@gmail.com",
-        pass: "pbymupdgbsvlndrt",
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Email Verification',
-      text: `Your verification code is: ${verificationCode}`,
-    };
-
-    await transporter.sendMail(mailOptions);
-    return sendResponse(
-      res,
-      201,
-      'success',
-      'User registered. Check your email for verification code.',
-      null
-    );
-
-    }
-
-    
-  } catch (error) {
-    return sendResponse(res, 500, 'error', error.message, null);
-  }
-};
 
 // Email Verification
 exports.verifyEmail = async (req, res) => {
