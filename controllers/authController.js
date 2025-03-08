@@ -36,6 +36,8 @@ exports.registerOrSignupUser = async (req, res) => {
   const { name, email, password, phone, referralCode } = req.body;
   const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 
+  concole.log(verificationCode);
+
   // Validate required fields
   if (!name || !email || !password || !phone) {
     return sendResponse(res, 400, 'error', 'All fields except referralCode are required', null);
@@ -50,10 +52,10 @@ exports.registerOrSignupUser = async (req, res) => {
         return sendResponse(res, 200, 'success', 'Email already verified.', null, user.id);
       } else {
         // Resend verification email
-
+        concole.log(verificationCode);
         user.verificationCode = verificationCode;
         await user.save();
-        
+
         await sendVerificationEmail(email, verificationCode);
         return sendResponse(res, 200, 'success', 'Verification email resent.', null);
       }
