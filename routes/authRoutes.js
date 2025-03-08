@@ -3,14 +3,14 @@ const express = require('express');
 const passport = require('../config/passport');
 
 const router = express.Router();
-const { signup, login, getProfile, registerUser, verifyEmail } = require('../controllers/authController');
+const { signup, login, getProfile, registerOrSignupUser,registerUser, verifyEmail } = require('../controllers/authController');
 const { sendResponse } = require('../utils/responseHelper');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // @route   POST /api/auth/signup
 // router.post('/signup', signup);
 
-// @route   POST /api/auth/login
+// @route   POST /api/auth/login565046565046
 router.post('/login', login);
 
 // User Registration
