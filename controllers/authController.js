@@ -89,7 +89,7 @@ exports.registerOrSignupUser = async (req, res) => {
     // Send verification email
     await sendVerificationEmail(email, verificationCode);
 
-    return sendResponse(res, 201, 'success', 'User registered. Check your email for verification code.', null, user.id);
+    return sendResponse(res, 201, 'success', 'User registered. Check your email for verification code.', null);
   } catch (err) {
     console.error(err.message);
     return sendResponse(res, 500, 'error', 'Server error', null);
