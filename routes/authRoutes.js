@@ -22,6 +22,10 @@ router.post('/verify-email', verifyEmail);
 // @route   GET /api/auth/profile
 router.get('/profile', authMiddleware, getProfile);
 
+// router.get('/profile', authMiddleware, updateUserPackage);
+
+
+
 
 router.get('/', (req, res) => {
     res.send('Welcome Home!');
