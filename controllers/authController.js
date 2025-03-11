@@ -456,5 +456,24 @@ exports.paystackWebhook = async (req, res) => {
   }
 };
 
+exports.getTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find();
+    return res.status(200).json({
+      status: 'success',
+      message: 'Task Retrieved successfully!.',
+      data: tasks,
+    });
+    // res.status(200).json(SocialPlatforms);
+  } catch (error) {
+  
+    return res.status(500).json({
+      status: 'error',
+      message: 'Error fetching tasks.',
+      data: "",
+    });
+  }
+};
+
 
 
