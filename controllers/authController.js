@@ -106,7 +106,11 @@ exports.login = async (req, res) => {
 
   try {
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate({
+      path: 'packageId',
+      select: 'name price', // Retrieve only name and price
+    });
+
     if (!user) {
       return sendResponse(res, 400, 'error', 'Invalid Credentials', null);
     }
@@ -116,10 +120,10 @@ exports.login = async (req, res) => {
       return sendResponse(res, 403, 'error', 'Email not verified', null);
     }
 
-    // Check if user has paid
-    if (!user.isPaid) {
-      return sendResponse(res, 403, 'error', 'Payment required', null);
-    }
+    // // Check if user has paid
+    // if (!user.isPaid) {
+    //   return sendResponse(res, 403, 'error', 'Payment required', null);
+    // }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
@@ -136,12 +140,25 @@ exports.login = async (req, res) => {
       .populate('engagementType')
       .populate('user', '-password'); // Exclude password from user details
 
+
+      const userResponse = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        photo: user.photo,
+        referralCode: user.referralCode,
+        mainBalance: user.mainBalance,
+        temporaryBalance: user.temporaryBalance,
+        isVerified: user.isVerified,
+        package: user.packageId ? { name: user.packageId.name, price: user.packageId.price } : null, // Handle package response
+      };
+
     return sendResponse(
       res,
       200,
       'success',
       'Authentication successful',
-      { user, tasks, token }
+      { userResponse, tasks, token }
     );
   } catch (err) {
     console.error(err.message);
