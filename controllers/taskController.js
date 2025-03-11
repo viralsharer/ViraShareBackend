@@ -448,3 +448,36 @@ exports.reviewTask = async (req, res) => {
       res.status(500).json({ status: 'error', message: 'Server error' });
   }
 };
+
+
+exports.getTasksByPriority = async (req, res) => {
+  try {
+      const { priority } = req.params;
+      const tasks = await Task.find({ priority });
+      res.json(tasks);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};
+
+// Update priority of a specific task
+exports.updateTaskPriority = async (req, res) => {
+  try {
+      const { id } = req.params;
+      const { priority } = req.body;
+
+      if (!['today', 'alltime'].includes(priority)) {
+          return res.status(400).json({ error: "Invalid priority value" });
+      }
+
+      const updatedTask = await Task.findByIdAndUpdate(id, { priority }, { new: true });
+
+      if (!updatedTask) {
+          return res.status(404).json({ error: "Task not found" });
+      }
+
+      res.json(updatedTask);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
+};

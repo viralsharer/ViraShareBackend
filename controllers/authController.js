@@ -135,7 +135,7 @@ exports.login = async (req, res) => {
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
     // Get user tasks with details
-    const tasks = await Task.find()
+    const tasks = await Task.find({ priority: "today" })
       .populate('socialPlatform')
       .populate('engagementType')
       .populate('user', '-password'); // Exclude password from user details
@@ -171,8 +171,37 @@ exports.login = async (req, res) => {
 // @access  Private
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    return sendResponse(res, 200, 'success', 'User profile retrieved', user);
+    const user = await User.findById(req.user.id).select('-password').populate({
+      path: 'packageId',
+      select: 'name price', // Retrieve only name and price
+    });
+    
+    const payload = { user: { id: user.id, role: 'user' } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+    const tasks = await Task.find({ priority: "today" })
+    .populate('socialPlatform')
+    .populate('engagementType')
+    .populate('user', '-password'); // Exclude password from user details
+
+  const userResponse = {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    photo: user.photo,
+    referralCode: user.referralCode,
+    mainBalance: user.mainBalance,
+    temporaryBalance: user.temporaryBalance,
+    isVerified: user.isVerified,
+    package: user.packageId ? { name: user.packageId.name, price: user.packageId.price } : null, // Handle package response
+  };
+  return sendResponse(
+    res,
+    200,
+    'success',
+    'User profile retrieved',
+    { userResponse, tasks, token }
+  );
   } catch (err) {
     console.error(err.message);
     return sendResponse(res, 500, 'error', 'Server error', null);

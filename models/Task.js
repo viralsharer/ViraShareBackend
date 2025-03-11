@@ -36,7 +36,7 @@ const TaskSchema = new mongoose.Schema({
       type: Number,
       required: true,
   },
-
+  priority: { type: String, enum: ['today', 'alltime'], default: 'alltime' },
   user: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', 
