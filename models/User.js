@@ -39,6 +39,12 @@ const UserSchema = new mongoose.Schema({
   packageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Package', default: null }, // Reference to Package
   amountPaid: { type: Number, default: 0 }, // Amount paid for the package
   isPaid: { type: Boolean, default: false }, // Payment status
+  bankDetails: {
+    accountNumber: { type: String },
+    bankName: { type: String },
+    bankCode: { type: String },
+    bvn: { type: String }
+  }
 }, { timestamps: true });
 
 UserSchema.pre('save', async function (next) {

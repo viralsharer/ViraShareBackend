@@ -1,6 +1,7 @@
 // backend/controllers/authController.js
 const User = require('../models/User');
 const Task = require('../models/Task');
+const axios = require("axios");
 const bcrypt = require('bcryptjs');
 const Package = require('../models/Package');
 const Transaction = require('../models/transaction');
@@ -9,7 +10,7 @@ const jwt = require('jsonwebtoken');
 
 const { sendResponse } = require('../utils/responseHelper');
 
-
+const SECRET_KEY = "sk_live_92c151b59738d38d7ec0624a4b2792bc7f5bdfca"; 
 
 // @desc    Register new user
 // @route   POST /api/auth/signup
@@ -485,6 +486,125 @@ exports.getTasks = async (req, res) => {
     return res.status(500).json({
       status: 'error',
       message: 'Error fetching tasks.',
+      data: "",
+    });
+  }
+};
+
+exports.updateBankDetails = async (req, res) => {
+  const { accountNumber, bankName, bankCode, bvn } = req.body;
+
+  try {
+    if (!accountNumber || !bankName || !bankCode || !bvn) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Fill all fields, don’t leave them blank!',
+        data: "",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { bankDetails: { accountNumber, bankName, bankCode, bvn } },
+      { new: true, select: 'bankDetails' }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found, check again!',
+        data: "",
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Bank details updated !',
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error.message,
+      // message: 'Updating failed, try again!',
+
+      data: "",
+    });
+  }
+};
+
+exports.listBanks = async (req, res) => {
+  try {
+    const config = {
+      method: 'get',
+      maxBodyLength: Infinity,
+      url: 'https://api.paystack.co/bank',
+      headers: { Authorization: `Bearer ${SECRET_KEY}` },
+    };
+
+    const response = await axios(config);
+    const { data } = response;
+
+    if (!data.status) {
+      return res.status(502).json({
+        status: 'error',
+        message: 'Fetching banks went astray!',
+        data: "",
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Banks retrieved, hip-hip-hooray!',
+      data: data.data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Request failed, not your day!',
+      data: "",
+    });
+  }
+};
+
+exports.verifyBankAccount = async (req, res) => {
+  try {
+    const { account_number, bank_code } = req.body;
+
+    if (!account_number || !bank_code) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Provide details, don’t delay!',
+        data: "",
+      });
+    }
+
+    const config = {
+      method: 'get',
+      url: `https://api.paystack.co/bank/resolve?account_number=${account_number}&bank_code=${bank_code}`,
+      headers: { Authorization: `Bearer ${SECRET_KEY}` },
+    };
+
+    const response = await axios(config);
+    const { data } = response;
+
+    if (!data.status) {
+      return res.status(502).json({
+        status: 'error',
+        message: 'Verification failed, not okay!',
+        data: "",
+      });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Bank account verified today!',
+      data: data.data,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: 'Something’s wrong, went astray!',
       data: "",
     });
   }
