@@ -182,7 +182,16 @@ exports.getProfile = async (req, res) => {
     const tasks = await Task.find({ priority: "today" })
     .populate('socialPlatform')
     .populate('engagementType')
-    .populate('user', '-password'); // Exclude password from user details
+    .populate('user', '-password').lean(); // Exclude password from user details
+
+
+    const formattedTasks = tasks.map(task => ({
+      ...task,
+      socialPlatform: task.socialPlatform?.name || null,
+      engagementType: Array.isArray(task.engagementType)
+        ? task.engagementType.map(et => et.name).join(', ') // Convert array to comma-separated string
+        : task.engagementType?.name || null, // Handle single object case
+    }));
 
   const userResponse = {
     id: user._id,
@@ -200,7 +209,7 @@ exports.getProfile = async (req, res) => {
     200,
     'success',
     'User profile retrieved',
-    { userResponse, tasks, token }
+    { userResponse, formattedTasks, token }
   );
   } catch (err) {
     console.error(err.message);
