@@ -244,6 +244,28 @@ exports.createTask = async (req, res) => {
 
 
 
+
+exports.gettLoggedInUserTaskLogs = async (req, res) => {
+  try {
+    const logs = await TaskLog.find({ userId: req.user.id }).populate('userId', 'name email').populate('taskId', 'title image','');
+   
+    res.status(201).json({ 
+      status: 'success', 
+      message: 'Task Log Retrieved successfully!', 
+      data: logs 
+  });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error retreving task',
+      data: '',
+  });
+  }
+};
+
+
 // @desc    Get all tasks for the logged-in user
 // @route   GET /api/tasks
 // @access  Private
@@ -268,22 +290,40 @@ exports.getLoggedInUserTasks = async (req, res) => {
 
 exports.getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find()
+      .populate({
+        path: 'socialPlatform',
+        select: 'name -_id', // Only fetch name, exclude _id
+      })
+      .populate({
+        path: 'engagementType',
+        select: 'name -_id', // Only fetch name, exclude _id
+      })
+      .lean(); 
+
+    // Transform the response to only include names
+    const formattedTasks = tasks.map(task => ({
+      ...task,
+      socialPlatform: task.socialPlatform?.name || null,
+      engagementType: Array.isArray(task.engagementType)
+        ? task.engagementType.map(et => et.name).join(', ') // Convert array to comma-separated string
+        : task.engagementType?.name || null, // Handle single object case
+    }));
+
     return res.status(200).json({
       status: 'success',
-      message: 'Task Retrieved successfully!.',
-      data: tasks,
+      message: 'Tasks retrieved successfully!',
+      data: formattedTasks,
     });
-    // res.status(200).json(SocialPlatforms);
   } catch (error) {
-  
     return res.status(500).json({
       status: 'error',
-      message: 'Error fetching tasks.',
-      data: "",
+      message: 'Something went wrong.',
+      error: error.message,
     });
   }
 };
+
 
 // @desc    Get a single task by ID
 // @route   GET /api/tasks/:id
@@ -479,5 +519,20 @@ exports.updateTaskPriority = async (req, res) => {
       res.json(updatedTask);
   } catch (error) {
       res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getTaskLogs = async (req, res) => {
+  try {
+      const logs = await TaskLog.find().populate('userId', 'name email').populate('taskId', 'title image');
+
+      res.json({
+          status: 'success',
+          data: logs
+      });
+
+  } catch (error) {
+      console.error('Error fetching task logs:', error);
+      res.status(500).json({ status: 'error', message: 'Server error' });
   }
 };

@@ -15,6 +15,7 @@ const TransactionSchema = new mongoose.Schema(
     amount: { type: Number, required: true }, // Added field
     settled_amount: { type: Number, required: true },
     charges: { type: Number, required: true },
+    details: { type: String },
     transaction_type: {
       type: String,
       enum: ['credit', 'debit','membership'],

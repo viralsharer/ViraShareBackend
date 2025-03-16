@@ -3,7 +3,8 @@ const express = require('express');
 const passport = require('../config/passport');
 
 const router = express.Router();
-const { signup, login, getProfile, registerOrSignupUser,paystackWebhook, verifyEmail } = require('../controllers/authController');
+const {  login, getProfile, registerOrSignupUser,paystackWebhook, verifyEmail ,resendVerification, forgotPassword,resetPassword} = require('../controllers/authController');
+const { datapackages,buy,services,datapurchase} = require('../controllers/airtimeController');
 const { sendResponse } = require('../utils/responseHelper');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -14,6 +15,18 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/login', login);
 
 router.post('/virashare', paystackWebhook);
+
+router.post('/resend', resendVerification);
+
+
+
+
+
+
+router.post('/forgot-password', forgotPassword);
+
+
+router.post('/reset-password', resetPassword);
 
 // User Registration
 router.post('/register', registerOrSignupUser);
@@ -26,6 +39,10 @@ router.get('/profile', authMiddleware, getProfile);
 
 // router.get('/profile', authMiddleware, updateUserPackage);
 
+router.get('/services', authMiddleware, services);
+router.post('/airtime',authMiddleware, buy);
+router.post('/data-packages',authMiddleware, datapackages);
+router.post('/datapurchase',authMiddleware, datapurchase);
 
 
 
@@ -33,47 +50,5 @@ router.get('/', (req, res) => {
     res.send('Welcome Home!');
 });
 
-// Example login route
-// router.get('/login', (req, res) => {
-//     res.send('Please log in.');
-// });
-
-console.log(passport);
-router.get('/twitter', passport.authenticate('twitter'));
-router.get('/twitter/callback', 
-  passport.authenticate('twitter', {
-    failureMessage: true,
-    failureRedirect: '/api/auth/'
-  }),
-  (req, res) => {
-    // Redirect to a custom route where you handle the response
-    res.redirect(`/api/auth/callback/response`);
-  }
-);
-
-
-router.get('/callback/response', (req, res) => {
-  // Assuming the user is available in req.user
-  if (!req.user) {
-    return sendResponse(res, 401, 'error', 'User not authenticated', null);
-  }
-
-  // Send a successful response with JWT
-  return sendResponse(
-    res,
-    200,
-    'success',
-    'User authenticated successfully',
-    null,
-    req.user.id
-  );
-});
-
-// Discord Authentication
-router.get('/auth/discord', passport.authenticate('discord'));
-router.get('/auth/discord/callback', passport.authenticate('discord', {
-  successRedirect: '/profile',
-  failureRedirect: '/'
-}));
 
 module.exports = router;

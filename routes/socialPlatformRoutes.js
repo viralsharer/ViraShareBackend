@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const socialPlatformController = require('../controllers/socialPlatformController');
-const authMiddleware = require('../middleware/authMiddleware');
+
 router.post('/', socialPlatformController.createSocialPlatform);
 router.get('/', socialPlatformController.getSocialPlatforms);
 router.get('/:id', socialPlatformController.getSocialPlatformById);

@@ -10,11 +10,11 @@ const TaskSchema = new mongoose.Schema({
       type: String,
       required: true,
   },
-  socialPlatform: [{
+  socialPlatform:{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'SocialPlatform', 
     required: true,
-  }],
+  },
   engagementType: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'EngagementType', 

@@ -1,47 +1,12 @@
 const Admin = require('../models/Admin');
+const TaskLog = require('../models/TaskLog');
+const Task = require('../models/Task'); 
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Admin Login
-exports.adminLogin = async (req, res) => {
-  const { email, password } = req.body;
 
-  try {
-    const admin = await Admin.findOne({ email }).select('-password');
-    if (!admin) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid Credentials',
-        data: null,
-      });
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid Credentials',
-        data: null,
-      });
-    }
-
-    const payload = { user: { id: admin.id, role: 'admin' } };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-
-    return res.status(200).json({
-      status: 'success',
-      message: 'Authentication successful',
-      data: { token, admin },
-    });
-
-  } catch (err) {
-    return res.status(500).json({
-      status: 'error',
-      message: 'Server error',
-      data: null,
-    });
-  }
-};
 
 
 exports.adminLogin = async (req, res) => {
@@ -129,7 +94,7 @@ exports.createAdmin = async (req, res) => {
 
 exports.getTaskLogs = async (req, res) => {
     try {
-        const logs = await TaskLog.find().populate('userId', 'name email').populate('taskId', 'title');
+        const logs = await TaskLog.find().populate('userId', 'name email').populate('taskId', 'title image');
 
         res.json({
             status: 'success',

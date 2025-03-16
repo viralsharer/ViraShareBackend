@@ -284,25 +284,26 @@ exports.forgotPassword = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return sendResponse(res, 404, 'error', 'User not found.', null);
+      return sendResponse(res, 404, "error", "User not found.", null);
     }
 
-    // Generate password reset token
-    const resetToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    user.resetPasswordToken = resetToken;
+    // Generate a 6-digit OTP
+    const resetOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordOTP = resetOTP;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
     await user.save();
 
-    // Send Reset Email
+    // Send OTP via email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Password Reset',
-      text: `Use this token to reset your password: ${resetToken}`,
+      subject: "Password Reset OTP",
+      text: `Your OTP for password reset is: ${resetOTP}. This OTP expires in 10 minutes.`,
     });
 
-    return sendResponse(res, 200, 'success', 'Password reset email sent.', null);
+    return sendResponse(res, 200, "success", "Password reset OTP sent.", null);
   } catch (error) {
-    return sendResponse(res, 500, 'error', error.message, null);
+    return sendResponse(res, 500, "error", error.message, null);
   }
 };
 
@@ -310,27 +311,32 @@ exports.forgotPassword = async (req, res) => {
 // @route POST /api/auth/reset-password
 // @access Public
 exports.resetPassword = async (req, res) => {
-  const { token, newPassword } = req.body;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+  const { email, otp, newPassword } = req.body;
 
-    if (!user || user.resetPasswordToken !== token) {
-      return sendResponse(res, 400, 'error', 'Invalid or expired token.', null);
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user || user.resetPasswordOTP !== otp) {
+      return sendResponse(res, 400, "error", "Invalid or expired OTP.", null);
+    }
+
+    // Check if OTP is expired
+    if (user.resetPasswordExpires < Date.now()) {
+      return sendResponse(res, 400, "error", "OTP has expired. Please request a new one.", null);
     }
 
     // Hash new password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
-    user.resetPasswordToken = null;
+    user.resetPasswordOTP = null; // Clear OTP
+    user.resetPasswordExpires = null;
     await user.save();
 
-    return sendResponse(res, 200, 'success', 'Password reset successful.', null);
+    return sendResponse(res, 200, "success", "Password reset successful.", null);
   } catch (error) {
-    return sendResponse(res, 500, 'error', error.message, null);
+    return sendResponse(res, 500, "error", error.message, null);
   }
 };
-
 
 exports.updateUserPackage = async (req, res) => {
   const { userId, packageId, amountPaid } = req.body;
@@ -474,6 +480,8 @@ exports.getTasks = async (req, res) => {
     });
   }
 };
+
+
 
 
 
