@@ -179,13 +179,13 @@ exports.getProfile = async (req, res) => {
     const payload = { user: { id: user.id, role: 'user' } };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-    const tasks = await Task.find({ priority: "today" })
+    const task = await Task.find({ priority: "today" })
     .populate('socialPlatform')
     .populate('engagementType')
     .populate('user', '-password').lean(); // Exclude password from user details
 
 
-    const formattedTasks = tasks.map(task => ({
+    const tasks = task.map(task => ({
       ...task,
       socialPlatform: task.socialPlatform?.name || null,
       engagementType: Array.isArray(task.engagementType)
@@ -209,7 +209,7 @@ exports.getProfile = async (req, res) => {
     200,
     'success',
     'User profile retrieved',
-    { userResponse, formattedTasks, token }
+    { userResponse, tasks, token }
   );
   } catch (err) {
     console.error(err.message);
