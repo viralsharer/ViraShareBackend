@@ -12,10 +12,19 @@ const TransactionSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    phone:{ type: String },
+    account_no:{ type: String },
+    account_name:{ type: String },
+    bank_name:{ type: String },
     amount: { type: Number, required: true }, // Added field
     settled_amount: { type: Number, required: true },
     charges: { type: Number, required: true },
     details: { type: String },
+
+    transaction_services: {
+      type: String,
+      enum: ['data_purchase', 'airtime_purchase','funds_transfer']
+    },
     transaction_type: {
       type: String,
       enum: ['credit', 'debit','membership'],

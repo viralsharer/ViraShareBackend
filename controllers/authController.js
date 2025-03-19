@@ -611,6 +611,27 @@ exports.verifyBankAccount = async (req, res) => {
 };
 
 
+exports.getBankDetails = async (req, res) => {
+  try {
+      // const { userId } = req.user.id;
+console.log(req.user.id);
+      const user = await User.findById(req.user.id).select('bankDetails');
+      if (!user) {
+          return res.status(404).json({ status: 'error', message: 'User not found' });
+      }
+
+      res.json({
+          status: 'success',
+          data: user.bankDetails
+      });
+
+  } catch (error) {
+      console.error('Error fetching bank details:', error);
+      res.status(500).json({ status: 'error', message: 'Server error' });
+  }
+};
+
+
 
 
 
