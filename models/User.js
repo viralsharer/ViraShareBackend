@@ -54,4 +54,19 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
+UserSchema.methods.checkForEmptyFields = function () {
+  const requiredFields = {
+    bankDetails: ['accountNumber', 'bankName', 'bankCode', 'bvn'],
+  };
+
+  for (const [section, fields] of Object.entries(requiredFields)) {
+    for (const field of fields) {
+      if (!this[section] || !this[section][field]) {
+        return section; // Return section name if a required field is missing
+      }
+    }
+  }
+  return "completed"; 
+};
+
 module.exports = mongoose.model('User', UserSchema);

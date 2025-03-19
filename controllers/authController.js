@@ -116,9 +116,11 @@ exports.login = async (req, res) => {
       return sendResponse(res, 400, 'error', 'Invalid Credentials', null);
     }
 
+
+
     // Check if email is verified
     if (!user.isVerified) {
-      return sendResponse(res, 403, 'error', 'Email not verified', null);
+      return sendResponse(res, 403, 'error', 'Email not verified', emptyField);
     }
 
     // // Check if user has paid
@@ -132,6 +134,9 @@ exports.login = async (req, res) => {
       return sendResponse(res, 400, 'error', 'Invalid Credentials', null);
     }
 
+
+    const emptyField = await user.checkForEmptyFields();
+ 
     const payload = { user: { id: user.id, role: 'user' } };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
@@ -152,6 +157,7 @@ exports.login = async (req, res) => {
         temporaryBalance: user.temporaryBalance,
         isVerified: user.isVerified,
         package: user.packageId ? { name: user.packageId.name, price: user.packageId.price } : null, // Handle package response
+        bankDetails: user.bankDetails || {},     
       };
 
     return sendResponse(
@@ -159,7 +165,7 @@ exports.login = async (req, res) => {
       200,
       'success',
       'Authentication successful',
-      { userResponse, tasks, token }
+      { userResponse, tasks, token,emptyField }
     );
   } catch (err) {
     console.error(err.message);
@@ -204,6 +210,7 @@ exports.getProfile = async (req, res) => {
     temporaryBalance: user.temporaryBalance,
     isVerified: user.isVerified,
     package: user.packageId ? { name: user.packageId.name, price: user.packageId.price } : null, // Handle package response
+    bankDetails: user.bankDetails || {}, 
   };
   return sendResponse(
     res,
