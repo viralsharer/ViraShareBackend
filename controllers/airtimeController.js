@@ -68,14 +68,34 @@ exports.buy = async (req, res) => {
   }
 };
 
+// const serviceIDs = {
+//   airtime: { MTN: "BAD", Glo: "BAB", Airtel: "BAA", "9mobile": "BAC" },
+//   data: { MTN: "BCA", Glo: "BCB", Airtel: "BCD", "9mobile": "BCC" },
+// };
+
+// exports.services = async (req, res) => {
+//   return sendResponse(res, 200, 'success', 'Service IDs retrieved', serviceIDs);
+// };
+
 const serviceIDs = {
-  airtime: { MTN: "BAD", Glo: "BAB", Airtel: "BAA", "9mobile": "BAC" },
-  data: { MTN: "BCA", Glo: "BCB", Airtel: "BCD", "9mobile": "BCC" },
+  airtime: [
+    { provider: "MTN", code: "BAD", logo: "/uploads/mtn.png" },
+    { provider: "Glo", code: "BAB", logo: "/uploads/glo.jpeg" },
+    { provider: "Airtel", code: "BAA", logo: "/uploads/airtel.jpeg" },
+    { provider: "9mobile", code: "BAC", logo: "/uploads/9mobile.png" }
+  ],
+  data: [
+    { provider: "MTN", code: "BCA", logo: "/uploads/mtn.png" },
+    { provider: "Glo", code: "BCB", logo: "/uploads/glo.jpeg" },
+    { provider: "Airtel", code: "BCD", logo: "/uploads/airtel.jpeg" },
+    { provider: "9mobile", code: "BCC", logo: "/uploads/9mobile.png" }
+  ]
 };
 
 exports.services = async (req, res) => {
-  return sendResponse(res, 200, 'success', 'Service IDs retrieved', serviceIDs);
+  return sendResponse(res, 200, "success", "Service IDs retrieved", serviceIDs);
 };
+
 
 const fetchServicePackages = async (service_id, requestType) => {
   try {
@@ -164,15 +184,21 @@ exports.datapurchase = async (req, res) => {
 
 exports.fundTransfer = async (req, res) => {
   try {
-      const { userId, amount, recipientAccount, bankCode } = req.body;
+      const {  amount } = req.body;
+
+      // accountNumber: user.bankDetails.accountNumber,
+      // bankCode: user.bankDetails.bankCode,
+
+
+      const userId = req.user.id
 
       // Validate required fields
-      if (!userId || !amount || !recipientAccount || !bankCode) {
-          return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+      if ( !amount ) {
+          return res.status(400).json({ status: 'error', message: 'Amount required ' });
       }
 
       // Find user
-      const user = await User.findById(userId);
+      const user = await User.findById(userId).select('bankDetails');
       if (!user) {
           return res.status(404).json({ status: 'error', message: 'User not found' });
       }
@@ -181,6 +207,10 @@ exports.fundTransfer = async (req, res) => {
       if (user.mainBalance < amount) {
           return res.status(400).json({ status: 'error', message: 'Insufficient balance' });
       }
+
+      const recipientAccount = user.bankDetails.accountNumber;
+
+      const bankCode = user.bankDetails.bankCode;
 
       // Paystack API: Create recipient
       const recipientResponse = await axios.post(

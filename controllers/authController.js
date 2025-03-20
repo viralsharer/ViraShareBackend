@@ -191,7 +191,7 @@ exports.getProfile = async (req, res) => {
     .populate('engagementType')
     .populate('user', '-password').lean(); // Exclude password from user details
 
-
+    const emptyField = await user.checkForEmptyFields();
     const tasks = task.map(task => ({
       ...task,
       socialPlatform: task.socialPlatform?.name || null,
@@ -217,7 +217,7 @@ exports.getProfile = async (req, res) => {
     200,
     'success',
     'User profile retrieved',
-    { userResponse, tasks, token }
+    { userResponse, tasks, token,emptyField }
   );
   } catch (err) {
     console.error(err.message);
