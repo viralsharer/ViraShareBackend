@@ -8,6 +8,14 @@ const SECRET_KEY = "sk_live_dWsE50/ciRnZgCgmLd7xSbAS3OGDMHDuV0ih+0ftc7Y="; // Re
 const puc_key="pk_live_dOLwRGumuuuIVzv8RAHaZM1HyUkffFnZ7wl2KG2opEU=";
 
 
+// const PAYSTACK_SECRET_KEY ="sk_test_4dd611e2ccafd7c35528395028f44548076f2aba";
+
+const PAYSTACK_SECRET_KEY ="sk_live_67a7a1eddc2d3cb68cf18e416eb69bf7aa30b2b4";
+
+
+
+
+
 const purchaseAirtime = async (service_id, service_type, phoneNumber, amount) => {
   try {
     const response = await axios.post(
@@ -182,37 +190,134 @@ exports.datapurchase = async (req, res) => {
   }
 };
 
+// exports.fundTransfer = async (req, res) => {
+//   try {
+//       const {  amount } = req.body;
+
+//       // accountNumber: user.bankDetails.accountNumber,
+//       // bankCode: user.bankDetails.bankCode,
+
+
+//       const userId = req.user.id
+
+//       // Validate required fields
+//       if ( !amount ) {
+//           return res.status(400).json({ status: 'error', message: 'Amount required ' });
+//       }
+
+//       // Find user
+//       const user = await User.findById(userId).select('bankDetails');
+//       if (!user) {
+//           return res.status(404).json({ status: 'error', message: 'User not found' });
+//       }
+
+//       // Check if user has enough balance
+//       if (user.mainBalance < amount) {
+//           return res.status(400).json({ status: 'error', message: 'Insufficient balance' });
+//       }
+
+//       const recipientAccount = user.bankDetails.accountNumber;
+
+//       const bankCode = user.bankDetails.bankCode;
+
+//       // Paystack API: Create recipient
+//       const recipientResponse = await axios.post(
+//           'https://api.paystack.co/transferrecipient',
+//           {
+//               type: 'nuban',
+//               name: user.name,
+//               account_number: recipientAccount,
+//               bank_code: bankCode,
+//               currency: 'NGN'
+//           },
+//           {
+//               headers: {
+//                   Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+//                   'Content-Type': 'application/json'
+//               }
+//           }
+//       );
+
+//       if (!recipientResponse.data.status) {
+//           return res.status(400).json({ status: 'error', message: 'Failed to create transfer recipient' });
+//       }
+      
+//       const recipientCode = recipientResponse.data.data.recipient_code;
+
+//       // Paystack API: Initiate transfer
+//       const transferResponse = await axios.post(
+//           'https://api.paystack.co/transfer',
+//           {
+//               source: 'balance',
+//               reason: 'Fund Transfer',
+//               amount: amount * 100, // Convert to kobo
+//               recipient: recipientCode
+//           },
+//           {
+//               headers: {
+//                   Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+//                   'Content-Type': 'application/json'
+//               }
+//           }
+//       );
+
+//       if (!transferResponse.data.status) {
+//           return res.status(400).json({ status: 'error', message: 'Transfer failed' });
+//       }
+
+//       // Deduct amount from user balance
+//       user.mainBalance -= amount;
+//       await user.save();
+
+//       res.json({
+//           status: 'success',
+//           message: 'Transfer successful',
+//           data: transferResponse.data.data
+//       });
+
+//   } catch (error) {
+//       console.error('Error in fund transfer:', error.response ? error.response.data : error.message);
+//       res.status(500).json({ status: 'error', message:error });
+//   }
+// };
+
+
 exports.fundTransfer = async (req, res) => {
   try {
-      const {  amount } = req.body;
+      let { amount } = req.body;
 
-      // accountNumber: user.bankDetails.accountNumber,
-      // bankCode: user.bankDetails.bankCode,
-
-
-      const userId = req.user.id
-
-      // Validate required fields
-      if ( !amount ) {
-          return res.status(400).json({ status: 'error', message: 'Amount required ' });
+      if (!amount) {
+          return res.status(400).json({ status: 'error', message: 'Amount required' });
       }
 
-      // Find user
-      const user = await User.findById(userId).select('bankDetails');
+      amount = Number(amount); // Convert amount to number
+      if (isNaN(amount) || amount <= 0) {
+          return res.status(400).json({ status: 'error', message: 'Invalid amount' });
+      }
+
+      const userId = req.user.id;
+
+      // Find user and include mainBalance in the selection
+      const user = await User.findById(userId).select('bankDetails mainBalance name');
       if (!user) {
           return res.status(404).json({ status: 'error', message: 'User not found' });
       }
 
-      // Check if user has enough balance
+      if (typeof user.mainBalance !== 'number' || isNaN(user.mainBalance)) {
+          return res.status(400).json({ status: 'error', message: 'Invalid user balance' });
+      }
+
       if (user.mainBalance < amount) {
           return res.status(400).json({ status: 'error', message: 'Insufficient balance' });
       }
 
-      const recipientAccount = user.bankDetails.accountNumber;
+      const recipientAccount = user.bankDetails?.accountNumber;
+      const bankCode = user.bankDetails?.bankCode;
 
-      const bankCode = user.bankDetails.bankCode;
+      if (!recipientAccount || !bankCode) {
+          return res.status(400).json({ status: 'error', message: 'Bank details missing' });
+      }
 
-      // Paystack API: Create recipient
       const recipientResponse = await axios.post(
           'https://api.paystack.co/transferrecipient',
           {
@@ -224,7 +329,7 @@ exports.fundTransfer = async (req, res) => {
           },
           {
               headers: {
-                  Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                  Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
                   'Content-Type': 'application/json'
               }
           }
@@ -236,7 +341,6 @@ exports.fundTransfer = async (req, res) => {
 
       const recipientCode = recipientResponse.data.data.recipient_code;
 
-      // Paystack API: Initiate transfer
       const transferResponse = await axios.post(
           'https://api.paystack.co/transfer',
           {
@@ -247,7 +351,7 @@ exports.fundTransfer = async (req, res) => {
           },
           {
               headers: {
-                  Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                  Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
                   'Content-Type': 'application/json'
               }
           }
@@ -258,8 +362,24 @@ exports.fundTransfer = async (req, res) => {
       }
 
       // Deduct amount from user balance
-      user.mainBalance -= amount;
+      user.mainBalance = Number(user.mainBalance) - amount;
       await user.save();
+
+      const transaction = await Transaction.create({
+          transaction_id: `TXN_${Date.now()}`,
+          user_id: userId,
+          reference: `REF_${Date.now()}`,
+          amount: amount * 100,
+          settled_amount: amount * 100,
+          charges: 0,
+          transaction_type: "debit",
+          transaction_services: "fund_transfer",
+          details: `Fund transfer of ${amount} to ${recipientAccount}`,
+          status: "pending",
+          account_no: recipientAccount,
+          account_name: user.name,
+          bank_name: bankCode,
+      });
 
       res.json({
           status: 'success',
@@ -269,6 +389,6 @@ exports.fundTransfer = async (req, res) => {
 
   } catch (error) {
       console.error('Error in fund transfer:', error.response ? error.response.data : error.message);
-      res.status(500).json({ status: 'error', message: 'Server error' });
+      res.status(500).json({ status: 'error', message: error.message || 'Internal Server Error' });
   }
 };

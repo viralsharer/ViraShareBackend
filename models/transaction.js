@@ -20,10 +20,10 @@ const TransactionSchema = new mongoose.Schema(
     settled_amount: { type: Number, required: true },
     charges: { type: Number, required: true },
     details: { type: String },
-
+    
     transaction_services: {
       type: String,
-      enum: ['data_purchase', 'airtime_purchase','funds_transfer']
+      enum: ['data_purchase', 'airtime_purchase','fund_transfer']
     },
     transaction_type: {
       type: String,

@@ -42,8 +42,7 @@ const UserSchema = new mongoose.Schema({
   bankDetails: {
     accountNumber: { type: String },
     bankName: { type: String },
-    bankCode: { type: String },
-    bvn: { type: String }
+    bankCode: { type: String }
   }
 }, { timestamps: true });
 

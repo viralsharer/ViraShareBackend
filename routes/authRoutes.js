@@ -3,8 +3,8 @@ const express = require('express');
 const passport = require('../config/passport');
 
 const router = express.Router();
-const {  getBankDetails,verifyBankAccount,updateBankDetails,listBanks,login, getProfile, registerOrSignupUser,paystackWebhook, verifyEmail ,resendVerification, forgotPassword,resetPassword} = require('../controllers/authController');
-const { datapackages,buy,services,datapurchase} = require('../controllers/airtimeController');
+const { changePassword, getBankDetails,verifyBankAccount,updateBankDetails,listBanks,login, getProfile, registerOrSignupUser,paystackWebhook, verifyEmail ,resendVerification, forgotPassword,resetPassword} = require('../controllers/authController');
+const {fundTransfer, datapackages,buy,services,datapurchase} = require('../controllers/airtimeController');
 const { sendResponse } = require('../utils/responseHelper');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -28,6 +28,8 @@ router.post('/forgot-password', forgotPassword);
 
 router.post('/reset-password', resetPassword);
 
+router.post('/change-password',authMiddleware, changePassword);
+
 // User Registration
 router.post('/register', registerOrSignupUser);
 
@@ -47,7 +49,7 @@ router.post('/account-details',authMiddleware, updateBankDetails);
 router.get('/getBank', authMiddleware,listBanks);
 router.post('/verify-account',authMiddleware, verifyBankAccount);
 router.get('/get-bankdetails',authMiddleware, getBankDetails);
-
+router.post('/transfer',authMiddleware, fundTransfer);
 
 
 

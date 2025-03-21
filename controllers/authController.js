@@ -225,6 +225,44 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+exports.changePassword = async (req, res) => {
+  try {
+      const { oldPassword, newPassword } = req.body;
+      const userId = req.user.id; // Assuming you get the user ID from authentication middleware
+
+      // Validate input
+      if (!oldPassword || !newPassword) {
+          return res.status(400).json({ status: 'error', message: 'Both old and new passwords are required' });
+      }
+
+      // Find user
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ status: 'error', message: 'User not found' });
+      }
+
+      // Check if old password is correct
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+          return res.status(400).json({ status: 'error', message: 'Old password is incorrect' });
+      }
+
+      // Hash new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      // Update user password
+      user.password = hashedPassword;
+      await user.save();
+
+      res.json({ status: 'success', message: 'Password changed successfully' });
+
+  } catch (error) {
+      console.error('Error changing password:', error);
+      res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+};
+
 
 
 // Email Verification
@@ -391,92 +429,98 @@ exports.updateUserPackage = async (req, res) => {
 
 exports.paystackWebhook = async (req, res) => {
   try {
-    console.log('Webhook received:', req.body);
+          console.log('Webhook received:', req.body);
+          const { event, data } = req.body;
 
-    const { event, data: transactionData } = req.body;
+          if (!data) {
+              console.log('Invalid webhook data:', req.body);
+              return res.status(400).json({ success: false, message: 'Invalid webhook data' });
+          }
 
-    if (!transactionData) {
-      console.log('Invalid webhook data:', req.body);
-      return res.status(400).json({ success: false, message: 'Invalid webhook data' });
-    }
+          if (event === 'transfer.success' || event === 'transfer.failed') {
+              // Handle transfer status updates
+              const status = event === 'transfer.success' ? 'successful' : 'failed';
 
-    if (event !== 'charge.success') {
-      console.log('Event ignored:', event);
-      return res.status(400).json({ success: false, message: 'Event ignored' });
-    }
+              await Transaction.findOneAndUpdate(
+                  { reference: data.reference },
+                  { status }
+              );
 
-    console.log('Processing transaction:', transactionData);
+              console.log(`Transfer update: ${status} for reference ${data.reference}`);
+          } 
+          else if (event === 'charge.success') {
+              // Handle successful payment
+              const metadata = data.metadata || {};
+              const { user_id, package_id } = metadata;
+              const transaction_id = data.id;
+              const reference = data.reference;
+              const amount = data.amount / 100; // Convert kobo to Naira
+              const status = data.status;
+              const charges = data.fees || 0;
+              const transaction_type = 'membership';
 
-    const metadata = transactionData.metadata || {};
-    const { user_id, package_id } = metadata; // Extract package_id from metadata
-    const transaction_id = transactionData.id;
-    const reference = transactionData.reference;
-    const amount = transactionData.amount / 100; // Convert kobo to Naira
-    const status = transactionData.status;
-    const charges = transactionData.fees || 0;
-    const transaction_type = 'membership';
+              if (!transaction_id || !reference || !amount || !status || !user_id || !package_id) {
+                  console.log('Missing required fields:', {
+                      transaction_id, reference, amount, status, user_id, package_id
+                  });
+                  return res.status(400).json({ success: false, message: 'Missing required fields' });
+              }
 
-    if (!transaction_id || !reference || !amount || !status || !user_id || !package_id) {
-      console.log('Missing required fields:', {
-        transaction_id, reference, amount, status, user_id, package_id
-      });
-      return res.status(400).json({ success: false, message: 'Missing required fields' });
-    }
+              const existingTransaction = await Transaction.findOne({
+                  $or: [{ transaction_id }, { reference }]
+              });
 
-    const existingTransaction = await Transaction.findOne({
-      $or: [{ transaction_id }, { reference }]
-    });
+              if (existingTransaction) {
+                  console.log('Transaction already exists:', existingTransaction);
+                  return res.status(409).json({ success: false, message: 'Transaction already exists' });
+              }
 
-    if (existingTransaction) {
-      console.log('Transaction already exists:', existingTransaction);
-      return res.status(409).json({ success: false, message: 'Transaction already exists' });
-    }
+              const user = await User.findById(user_id);
+              if (!user) {
+                  console.log('User not found:', user_id);
+                  return res.status(404).json({ success: false, message: 'User not found' });
+              }
 
-    const user = await User.findById(user_id);
-    if (!user) {
-      console.log('User not found:', user_id);
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+              const packageExists = await Package.findById(package_id);
+              if (!packageExists) {
+                  console.log('Package not found:', package_id);
+                  return res.status(404).json({ success: false, message: 'Package not found' });
+              }
 
-    const packageExists = await Package.findById(package_id);
-    if (!packageExists) {
-      console.log('Package not found:', package_id);
-      return res.status(404).json({ success: false, message: 'Package not found' });
-    }
+              if (status === 'success') {
+                  user.packageId = package_id;
+                  user.amountPaid = amount;
+                  user.isPaid = true;
+                  await user.save();
+                  console.log('User package updated:', { packageId: user.packageId, amountPaid: user.amountPaid });
+              }
 
-    if (status === 'success') {
-      user.packageId = package_id;
-      user.amountPaid = amount;
-      user.isPaid = true;
-      await user.save();
-      console.log('User package updated:', { packageId: user.packageId, amountPaid: user.amountPaid });
-    }
+              const transaction = new Transaction({
+                  transaction_id,
+                  user_id,
+                  reference,
+                  amount: amount * 100,
+                  settled_amount: amount * 100,
+                  charges,
+                  transaction_type,
+                  status,
+              });
 
-    const transaction = new Transaction({
-      transaction_id,
-      user_id,
-      reference,
-      amount: amount * 100,
-      settled_amount: amount * 100,
-      charges,
-      transaction_type,
-      status,
-    });
+              await transaction.save();
+              console.log('Transaction saved:', transaction);
+          } 
+          else {
+              console.log('Event ignored:', event);
+              return res.status(400).json({ success: false, message: 'Event ignored' });
+          }
 
-    await transaction.save();
-    console.log('Transaction saved:', transaction);
+          res.status(200).json({ success: true, message: 'Webhook processed successfully' });
 
-    
+      } catch (error) {
+          console.error('Error processing Paystack webhook:', error);
+          res.status(500).json({ success: false, message: 'Server error' });
+      }
 
-    res.status(200).json({
-      success: true,
-      message: 'Transaction processed successfully',
-      data: transaction,
-    });
-  } catch (error) {
-    console.error('Error processing Paystack webhook:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
 };
 
 exports.getTasks = async (req, res) => {
@@ -499,10 +543,10 @@ exports.getTasks = async (req, res) => {
 };
 
 exports.updateBankDetails = async (req, res) => {
-  const { accountNumber, bankName, bankCode, bvn } = req.body;
+  const { accountNumber, bankName, bankCode } = req.body;
 
   try {
-    if (!accountNumber || !bankName || !bankCode || !bvn) {
+    if (!accountNumber || !bankName || !bankCode ) {
       return res.status(400).json({
         status: 'error',
         message: 'Fill all fields, don’t leave them blank!',
@@ -512,7 +556,7 @@ exports.updateBankDetails = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { bankDetails: { accountNumber, bankName, bankCode, bvn } },
+      { bankDetails: { accountNumber, bankName, bankCode } },
       { new: true, select: 'bankDetails' }
     );
 
