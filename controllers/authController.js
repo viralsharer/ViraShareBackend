@@ -682,7 +682,53 @@ console.log(req.user.id);
   }
 };
 
+exports.getTransactions = async (req, res) => {
 
+  try {
+    const user_id = req.user.id; // Get user_id from token
 
+    const transactions = await Transaction.find({ user_id }).sort({ createdAt: -1 });
+
+    if (transactions.length === 0) {
+        return res.status(404).json({ success: false, message: 'No transactions found' });
+    }
+
+    res.status(200).json({ success: true, data: transactions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+
+};
+
+exports.usernameupdates = async(req,res)=>{
+  try {
+    const { telegram, linkedin, instagram, facebook, twitter, youtube, tiktok } = req.body;
+    const userId = req.user.id; // Extract from the auth middleware
+
+    // Find user and update social media fields
+    const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        {
+            telegram: telegram || null,
+            linkedin: linkedin || null,
+            instagram: instagram || null,
+            facebook: facebook || null,
+            twitter: twitter || null,
+            youtube: youtube || null,
+            tiktok: tiktok || null
+        },
+        { new: true }
+    );
+
+    if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "Social media details updated successfully", user: updatedUser });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Server error" });
+  }
+}
 
 
