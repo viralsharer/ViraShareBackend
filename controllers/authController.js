@@ -97,7 +97,7 @@ exports.registerOrSignupUser = async (req, res) => {
     console.error(err.message);
     return sendResponse(res, 500, 'error', 'Server error', null);
   }
-};
+}; 
 
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
@@ -493,6 +493,37 @@ exports.paystackWebhook = async (req, res) => {
                   user.isPaid = true;
                   await user.save();
                   console.log('User package updated:', { packageId: user.packageId, amountPaid: user.amountPaid });
+
+                  if (user.referredBy) {
+                    const referrer = await User.findById(user.referredBy).session(session);
+                    if (referrer) {
+                        const referralReward = packageExists.referalpoint || 0;
+                        
+                        // Credit the referrer
+                        referrer.referralCount += 1;
+                        referrer.mainbalance += referralReward;
+                        await referrer.save({ session });
+                
+                        console.log(`Referrer credited: ${referrer.email}, Amount: ${referralReward}`);
+                
+                        // Create a transaction for the referral bonus
+                        const referralTransaction = new Transaction({
+                            transaction_id: `REF-${new Date().getTime()}-${referrer._id}`, // Unique transaction ID
+                            user_id: referrer._id,  // The referrer gets the reward
+                            reference: `Referral-${user._id}`,  // Reference linking to referred user
+                            amount: referralReward * 100,  // Convert to smallest unit
+                            settled_amount: referralReward * 100,
+                            charges: 0,  // No charges for referral bonus
+                            transaction_type: 'credit',
+                            transaction_services:'referral_bonus',
+                            status: 'success',
+                        });
+                
+                        await referralTransaction.save({ session });
+                        console.log(`Referral transaction saved for ${referrer.email}`);
+                    }
+                }
+                
               }
 
               const transaction = new Transaction({

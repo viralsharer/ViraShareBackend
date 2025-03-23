@@ -3,14 +3,14 @@ const { sendResponse } = require('../utils/responseHelper');
 
 // Create a package
 exports.createPackage = async (req, res) => {
-  const { name, price, description } = req.body;
+  const { name, price, description,referalpoint } = req.body;
 
   if (!name || !price) {
     return sendResponse(res, 400, 'error', 'Name and price are required', null);
   }
 
   try {
-    const newPackage = new Package({ name, price, description });
+    const newPackage = new Package({ name, price, description,referalpoint });
     await newPackage.save();
 
     return sendResponse(res, 201, 'success', 'Package created', newPackage);

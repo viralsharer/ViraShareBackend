@@ -32,6 +32,8 @@ const UserSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  referralCount: { type: Number, default: 0 }, 
+  // referralEarnings: { type: Number, default: 0 }
   mainBalance: { type: Number, default: 0 },
   temporaryBalance: { type: Number, default: 0 },
   isVerified: { type: Boolean, default: false },
@@ -62,7 +64,7 @@ UserSchema.pre('save', async function (next) {
 
 UserSchema.methods.checkForEmptyFields = function () {
   const requiredFields = {
-    bankDetails: ['accountNumber', 'bankName', 'bankCode', 'bvn'],
+    bankDetails: ['accountNumber', 'bankName', 'bankCode'],
   };
 
   for (const [section, fields] of Object.entries(requiredFields)) {
