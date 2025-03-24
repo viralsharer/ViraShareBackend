@@ -157,7 +157,16 @@ exports.login = async (req, res) => {
         temporaryBalance: user.temporaryBalance,
         isVerified: user.isVerified,
         package: user.packageId ? { name: user.packageId.name, price: user.packageId.price } : null, // Handle package response
-        bankDetails: user.bankDetails || {},     
+        bankDetails: user.bankDetails || {},
+        socialMedia: {
+          telegram: user.telegram || null,
+          linkedin: user.linkedin || null,
+          instagram: user.instagram || null,
+          facebook: user.facebook || null,
+          twitter: user.twitter || null,
+          youtube: user.youtube || null,
+          tiktok: user.tiktok || null
+      },    
       };
 
     return sendResponse(
@@ -210,7 +219,16 @@ exports.getProfile = async (req, res) => {
     temporaryBalance: user.temporaryBalance,
     isVerified: user.isVerified,
     package: user.packageId ? { name: user.packageId.name, price: user.packageId.price } : null, // Handle package response
-    bankDetails: user.bankDetails || {}, 
+    bankDetails: user.bankDetails || {},
+    socialMedia: {
+      telegram: user.telegram || null,
+      linkedin: user.linkedin || null,
+      instagram: user.instagram || null,
+      facebook: user.facebook || null,
+      twitter: user.twitter || null,
+      youtube: user.youtube || null,
+      tiktok: user.tiktok || null
+  },
   };
   return sendResponse(
     res,
