@@ -548,6 +548,8 @@ exports.paystackWebhook = async (req, res) => {
                   settled_amount: amount * 100,
                   charges,
                   transaction_type,
+                  transaction_services:"membership",
+                  details: `membership of ${amount} for ${packageExists.name}`,
                   status,
               });
 

@@ -23,7 +23,7 @@ const TransactionSchema = new mongoose.Schema(
     
     transaction_services: {
       type: String,
-      enum: ['data_purchase', 'airtime_purchase','fund_transfer','referral_bonus']
+      enum: ['data_purchase', 'airtime_purchase','fund_transfer','referral_bonus','membership']
     },
     transaction_type: {
       type: String,
