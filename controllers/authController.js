@@ -311,6 +311,13 @@ exports.resendVerification = async (req, res) => {
     if (user.isVerified) {
       return sendResponse(res, 400, 'error', 'Email already verified.', null);
     }
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // Use environment variables for security
+      },
+    });
 
     // Generate new verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -341,6 +348,13 @@ exports.forgotPassword = async (req, res) => {
     if (!user) {
       return sendResponse(res, 404, "error", "User not found.", null);
     }
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // Use environment variables for security
+      },
+    });
 
     // Generate a 6-digit OTP
     const resetOTP = Math.floor(100000 + Math.random() * 900000).toString();
@@ -574,10 +588,10 @@ exports.getTasks = async (req, res) => {
 };
 
 exports.updateBankDetails = async (req, res) => {
-  const { accountNumber, bankName, bankCode } = req.body;
+  const { accountNumber, bankName, bankCode ,accountName} = req.body;
 
   try {
-    if (!accountNumber || !bankName || !bankCode ) {
+    if (!accountNumber || !bankName || !bankCode || !accountName) {
       return res.status(400).json({
         status: 'error',
         message: 'Fill all fields, don’t leave them blank!',
@@ -587,7 +601,7 @@ exports.updateBankDetails = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { bankDetails: { accountNumber, bankName, bankCode } },
+      { bankDetails: { accountNumber, bankName, bankCode, accountName } },
       { new: true, select: 'bankDetails' }
     );
 

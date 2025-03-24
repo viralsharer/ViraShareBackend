@@ -51,7 +51,8 @@ const UserSchema = new mongoose.Schema({
   bankDetails: {
     accountNumber: { type: String },
     bankName: { type: String },
-    bankCode: { type: String }
+    bankCode: { type: String },
+    accountName:{ type: String },
   }
 }, { timestamps: true });
 
@@ -64,7 +65,7 @@ UserSchema.pre('save', async function (next) {
 
 UserSchema.methods.checkForEmptyFields = function () {
   const requiredFields = {
-    bankDetails: ['accountNumber', 'bankName', 'bankCode'],
+    bankDetails: ['accountNumber', 'bankName', 'bankCode','accountName'],
   };
 
   for (const [section, fields] of Object.entries(requiredFields)) {
