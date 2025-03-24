@@ -38,6 +38,7 @@ const UserSchema = new mongoose.Schema({
   temporaryBalance: { type: Number, default: 0 },
   isVerified: { type: Boolean, default: false },
   verificationCode: { type: String, default: null },
+  resetPasswordOTP:{ type: String, default: null },
   packageId: { type: mongoose.Schema.Types.ObjectId, ref: 'Package', default: null }, // Reference to Package
   amountPaid: { type: Number, default: 0 }, // Amount paid for the package
   isPaid: { type: Boolean, default: false }, // Payment status
