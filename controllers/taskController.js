@@ -352,23 +352,23 @@ exports.getTaskById = async (req, res) => {
 // @route   PUT /api/tasks/:id
 // @access  Private
 exports.updateTask = async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description,image, taskLink,taskPrice} = req.body;
 
   // Build task object
   const taskFields = {};
   if (title) taskFields.title = title;
   if (description) taskFields.description = description;
+  if (image) taskFields.image = image;
+  if (taskLink) taskFields.taskLink = taskLink;
+  if (taskPrice !== undefined) taskFields.taskPrice = taskPrice;
+
 
   try {
     let task = await Task.findById(req.params.id);
 
     if (!task) return res.status(404).json({ msg: 'Task not found' });
 
-    // Check user
-    if (task.creator.toString() !== req.user.id) {
-      return res.status(401).json({ msg: 'Not authorized' });
-    }
-
+    
     task = await Task.findByIdAndUpdate(
       req.params.id,
       { $set: taskFields },
