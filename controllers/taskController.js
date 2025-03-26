@@ -132,7 +132,7 @@ const isValidObjectId = (id) => {
 exports.createTask = async (req, res) => {
     try {
         // Extract data from the request body
-        const { title, image, socialPlatform, engagementType, rate, description, taskLink, taskPrice } = req.body;
+        const { title, image, socialPlatform, engagementType, description, taskLink, taskPrice } = req.body;
 
         // Validate the incoming data
         if (!title) {
@@ -151,13 +151,13 @@ exports.createTask = async (req, res) => {
             });
         }
 
-        if (!rate) {
-            return res.status(400).json({
-                status: 'error',
-                message: 'Rate is required.',
-                data: null,
-            });
-        }
+        // if (!rate) {
+        //     return res.status(400).json({
+        //         status: 'error',
+        //         message: 'Rate is required.',
+        //         data: null,
+        //     });
+        // }
 
         if (!description) {
             return res.status(400).json({
@@ -215,7 +215,7 @@ exports.createTask = async (req, res) => {
             image,
             socialPlatform,
             engagementType,
-            rate,
+            // rate,
             description,
             taskLink,
             taskPrice,
