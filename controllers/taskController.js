@@ -419,9 +419,22 @@ exports.performTask = async (req, res) => {
       }
 
       // Check if task is already performed
-      const existingLog = await TaskLog.findOne({ userId: user.id, taskId: task.id, status: 'pending' });
+      const existingLog = await TaskLog.findOne({ 
+          userId: user.id, 
+          taskId: task.id, 
+          status: { $in: ['pending', 'confirmed'] } 
+      });
+      
       if (existingLog) {
-          return res.status(400).json({ status: 'error', message: 'Task already performed, awaiting approval' });
+          let message = 'Task already performed';
+      
+          if (existingLog.status === 'pending') {
+              message += ', awaiting approval';
+          } else if (existingLog.status === 'confirmed') {
+              message += ', already confirmed';
+          }
+      
+          return res.status(400).json({ status: 'error', message });
       }
 
       // Create Task Log
