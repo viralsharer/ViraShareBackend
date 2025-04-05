@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { adminLogin, createAdmin,getTaskLogs } = require('../controllers/adminController');
+const { adminLogin, createAdmin,getTaskLogs,getAdminDashboard } = require('../controllers/adminController');
 
 
 
@@ -12,7 +12,10 @@ router.post('/create', createAdmin);
 // Admin Login
 router.post('/login', adminLogin);
 
-router.get('/getTaskLogs ', adminAuth, getTaskLogs );
+router.get('/getTaskLogs', adminAuth, getTaskLogs );
+
+router.get('/dashboard', adminAuth, getAdminDashboard );
+
 
 
 module.exports = router;

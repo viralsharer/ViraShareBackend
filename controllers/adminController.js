@@ -2,6 +2,9 @@ const Admin = require('../models/Admin');
 const TaskLog = require('../models/TaskLog');
 const Task = require('../models/Task'); 
 
+const User = require('../models/User');
+const Transaction = require('../models/transaction');
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -105,5 +108,41 @@ exports.getTaskLogs = async (req, res) => {
         console.error('Error fetching task logs:', error);
         res.status(500).json({ status: 'error', message: 'Server error' });
     }
+};
+
+
+exports.getAdminDashboard = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalTasks = await Task.countDocuments();
+    const taskLogs = await TaskLog.find().populate('userId taskId');
+    const transactions = await Transaction.find().populate('user_id');
+
+    const formattedTransactions = transactions.map(tx => ({
+      name: tx.user_id?.name || 'N/A',
+      email: tx.user_id?.email || 'N/A',
+      amount: tx.amount,
+      date: tx.createdAt,
+    }));
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Dashboard data fetched',
+      data: {
+        totalUsers,
+        totalTasks,
+        taskLogs,
+        transactions: formattedTransactions,
+      }
+    });
+
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Server error',
+      data: null
+    });
+  }
 };
 
