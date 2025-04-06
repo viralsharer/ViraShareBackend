@@ -6,6 +6,7 @@ const PackageSchema = new mongoose.Schema({
   description: { type: String },
   referalpoint:{ type: Number, required: true },
   createdAt: { type: Date, default: Date.now },
+  deleted: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model('Package', PackageSchema);

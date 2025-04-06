@@ -6,7 +6,8 @@ const SocialPlatformSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
-  }
+  },
+  deleted: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('SocialPlatform', SocialPlatformSchema);

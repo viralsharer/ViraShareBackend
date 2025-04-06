@@ -64,7 +64,15 @@ exports.updatePackage = async (req, res) => {
 // Delete a package
 exports.deletePackage = async (req, res) => {
   try {
-    const deletedPackage = await Package.findByIdAndDelete(req.params.id);
+    // const deletedPackage = await Package.findByIdAndDelete(req.params.id);
+
+
+
+    const deletedPackage = await Package.findByIdAndUpdate(
+      req.params.id, 
+      { deleted: true },  // Soft delete logic
+      { new: true }  // Return the updated document
+    );
     if (!deletedPackage) {
       return sendResponse(res, 404, 'error', 'Package not found', null);
     }
