@@ -146,3 +146,78 @@ exports.getAdminDashboard = async (req, res) => {
   }
 };
 
+
+exports.listAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({})
+      .populate('packageId', 'name') // Only select package name
+      .select('name email isPaid amountPaid packageId createdAt')
+      .sort({ createdAt: -1 });
+
+    const formattedUsers = users.map(user => ({
+      name: user.name,
+      email: user.email,
+      amountPaid: user.amountPaid,
+      isPaid: user.isPaid,
+      package: user.isPaid && user.packageId ? user.packageId.name : null,
+      createdAt: user.createdAt
+    }));
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Users fetched successfully',
+      data: formattedUsers
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Server error',
+      data: null
+    });
+  }
+};
+
+
+exports.getAllTransactions = async (req, res) => {
+  try {
+    const transactions = await Transaction.find({})
+      .populate('user_id', 'name email') // only bring in name and email
+      .sort({ createdAt: -1 });
+
+    // Format response (optional)
+    const formatted = transactions.map(tx => ({
+      id: tx._id,
+      user: tx.user_id ? {
+        name: tx.user_id.name,
+        email: tx.user_id.email,
+      } : null,
+      transaction_id: tx.transaction_id,
+      reference: tx.reference,
+      amount: tx.amount,
+      settled_amount: tx.settled_amount,
+      charges: tx.charges,
+      transaction_type: tx.transaction_type,
+      transaction_services: tx.transaction_services,
+      status: tx.status,
+      createdAt: tx.createdAt
+    }));
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Transactions fetched successfully',
+      data: formatted
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Server error',
+      data: null
+    });
+  }
+};
+
+

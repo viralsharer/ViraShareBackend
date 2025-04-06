@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { adminLogin, createAdmin,getTaskLogs,getAdminDashboard } = require('../controllers/adminController');
+const { adminLogin, createAdmin,getTaskLogs,getAdminDashboard,listAllUsers,getAllTransactions } = require('../controllers/adminController');
 
 
 
@@ -15,6 +15,9 @@ router.post('/login', adminLogin);
 router.get('/getTaskLogs', adminAuth, getTaskLogs );
 
 router.get('/dashboard', adminAuth, getAdminDashboard );
+
+router.get('/alluser', adminAuth, listAllUsers );
+router.get('/transactions', adminAuth, getAllTransactions );
 
 
 
