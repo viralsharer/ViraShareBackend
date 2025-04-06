@@ -537,7 +537,7 @@ exports.updateTaskPriority = async (req, res) => {
 
 exports.getTaskLogs = async (req, res) => {
   try {
-      const logs = await TaskLog.find().populate('userId', 'name email').populate('taskId', 'title image');
+      const logs = await TaskLog.find().populate('userId', 'name email').populate('taskId', 'title image taskLink');
 
       res.json({
           status: 'success',
