@@ -3,9 +3,9 @@ const axios = require("axios");
 const User = require('../models/User');
 const Transaction = require('../models/transaction');
 
-const SECRET_KEY = "sk_live_dWsE50/ciRnZgCgmLd7xSbAS3OGDMHDuV0ih+0ftc7Y="; // Replace with actual secret key
+const SECRET_KEY = "sk_live_KE3Zp9yTpdMwTG8ireB2ajyZEScbQXxASAaIcLbHkko="; // Replace with actual secret key
 
-const puc_key="pk_live_dOLwRGumuuuIVzv8RAHaZM1HyUkffFnZ7wl2KG2opEU=";
+const puc_key="pk_live_QBbMPm6pe2LONTAKCyT+CizATksJUGjhqlLTobLVEWo=";
 
 
 // const PAYSTACK_SECRET_KEY ="sk_test_4dd611e2ccafd7c35528395028f44548076f2aba";

@@ -1,7 +1,7 @@
 const Admin = require('../models/Admin');
 const TaskLog = require('../models/TaskLog');
 const Task = require('../models/Task'); 
-
+const Package = require('../models/Package');
 const User = require('../models/User');
 const Transaction = require('../models/transaction');
 
@@ -115,8 +115,13 @@ exports.getAdminDashboard = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalTasks = await Task.countDocuments();
+    const totalPackages = await Package.countDocuments();
+
     const taskLogs = await TaskLog.find().populate('userId taskId');
     const transactions = await Transaction.find().populate('user_id');
+    const users = await User.find()
+      .populate('packageId', 'name') // Get only the package name
+      .select('name email isPaid packageId createdAt');
 
     const formattedTransactions = transactions.map(tx => ({
       name: tx.user_id?.name || 'N/A',
@@ -125,14 +130,24 @@ exports.getAdminDashboard = async (req, res) => {
       date: tx.createdAt,
     }));
 
+    const formattedUsers = users.map(user => ({
+      name: user.name,
+      email: user.email,
+      date: user.createdAt,
+      isPaid: user.isPaid,
+      package: user.packageId ? user.packageId.name : null,
+    }));
+
     return res.status(200).json({
       status: 'success',
       message: 'Dashboard data fetched',
       data: {
         totalUsers,
         totalTasks,
+        totalPackages,
         taskLogs,
         transactions: formattedTransactions,
+        users: formattedUsers,
       }
     });
 
