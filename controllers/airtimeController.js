@@ -340,14 +340,16 @@ exports.fundTransfer = async (req, res) => {
       }
 
       const recipientCode = recipientResponse.data.data.recipient_code;
-
+      reference ='REF' + crypto.randomBytes(3).toString('hex');
+    
       const transferResponse = await axios.post(
           'https://api.paystack.co/transfer',
           {
               source: 'balance',
               reason: 'Fund Transfer',
               amount: amount * 100, // Convert to kobo
-              recipient: recipientCode
+              recipient: recipientCode,
+              reference :reference
           },
           {
               headers: {
@@ -368,7 +370,7 @@ exports.fundTransfer = async (req, res) => {
       const transaction = await Transaction.create({
           transaction_id: `TXN_${Date.now()}`,
           user_id: userId,
-          reference: `REF_${Date.now()}`,
+          reference: reference,
           amount: amount * 100,
           settled_amount: amount * 100,
           charges: 0,
