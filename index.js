@@ -35,7 +35,17 @@ app.use(session({
 
 // Middleware
 // CORS setup
-const allowedOrigins = [process.env.FRONTEND_URL];
+// const allowedOrigins = [process.env.FRONTEND_URL];
+
+const allowedOrigins = [
+  'https://www.virashare.io',
+  'https://virashare.io',
+  'https://app.virashare.io',
+  'http://www.virashare.io',
+  'http://virashare.io',
+  'http://app.virashare.io'
+];
+
 
 app.use(cors({
   origin: function (origin, callback) {
