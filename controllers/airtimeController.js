@@ -94,9 +94,9 @@ const serviceIDs = {
   ],
   data: [
     { provider: "MTN", code: "BCA", logo: "/uploads/mtn.png" },
-    { provider: "Glo", code: "BCB", logo: "/uploads/glo.jpeg" },
+    { provider: "9mobile", code: "BCB", logo: "/uploads/9mobile.jpeg" },
     { provider: "Airtel", code: "BCD", logo: "/uploads/airtel.jpeg" },
-    { provider: "9mobile", code: "BCC", logo: "/uploads/9mobile.png" }
+    { provider: "Glo", code: "BCC", logo: "/uploads/glo.png" }
   ]
 };
 
