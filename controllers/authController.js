@@ -4,9 +4,11 @@ const Task = require('../models/Task');
 const axios = require("axios");
 const bcrypt = require('bcryptjs');
 const Package = require('../models/Package');
+const mongoose = require('mongoose');
 const Transaction = require('../models/transaction');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
+const Coupon = require('../models/Coupon'); 
 
 const { sendResponse } = require('../utils/responseHelper');
 
@@ -422,6 +424,63 @@ exports.resetPassword = async (req, res) => {
     return sendResponse(res, 200, "success", "Password reset successful.", null);
   } catch (error) {
     return sendResponse(res, 500, "error", error.message, null);
+  }
+};
+
+exports.applyCouponAndUpdatePackage  = async (req, res) => {
+  const { packageId,code, amountPaid } = req.body;
+  const now = new Date();
+
+  
+  if ( !packageId || !amountPaid) {
+    return sendResponse(res, 400, 'error', 'Missing required fields', null);
+  }
+
+  try {
+    // Check if package exists
+ 	const userId = req.user.id;
+  // Validate packageId format
+if (!mongoose.Types.ObjectId.isValid(packageId)) {
+  return sendResponse(res, 400, 'error', 'Invalid package ID format', null);
+}
+    const packageExists = await Package.findById(packageId);
+    if (!packageExists) {
+      return sendResponse(res, 404, 'error', 'Package not found', null);
+    }
+
+    let finalAmount = amountPaid;
+
+    // If coupon code is provided, validate it
+    let coupon = null;
+    if (code) {
+      coupon = await Coupon.findOne({ code, packageId, isActive: true, expiryDate: { $gte: now } });
+      if (!coupon) {
+        return sendResponse(res, 400, 'error', 'Invalid or expired coupon', null);
+      }
+
+      // Optionally deactivate coupon after use
+      coupon.isActive = false;
+      await coupon.save();
+    }
+
+    // Update user payment details
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { packageId, amountPaid: finalAmount, isPaid: true },
+      { new: true }
+    );
+
+    if (!user) {
+      return sendResponse(res, 404, 'error', 'User not found', null);
+    }
+
+    return sendResponse(res, 200, 'success', 'User package updated', {
+      user,
+      appliedCoupon: coupon || null,
+      finalAmount
+    });
+  } catch (err) {
+    return sendResponse(res, 500, 'error', err.message, null);
   }
 };
 

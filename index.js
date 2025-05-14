@@ -69,6 +69,7 @@ app.use('/api/engagement-types', require('./routes/engagementTypeRoutes'));
 
 app.use('/api/social-platform', require('./routes/socialPlatformRoutes'));
 app.use('/api/packages', require('./routes/packageRoutes'));
+app.use('/api/coupon', require('./routes/couponRoutes'));
 
 // Start the server
 const PORT = process.env.PORT || 5000;

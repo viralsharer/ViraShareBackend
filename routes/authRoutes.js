@@ -3,7 +3,7 @@ const express = require('express');
 const passport = require('../config/passport');
 
 const router = express.Router();
-const { usernameupdates,getBalance,getTransactions,changePassword, getBankDetails,verifyBankAccount,updateBankDetails,listBanks,login, getProfile, registerOrSignupUser,paystackWebhook, verifyEmail ,resendVerification, forgotPassword,resetPassword} = require('../controllers/authController');
+const { applyCouponAndUpdatePackage,usernameupdates,getBalance,getTransactions,changePassword, getBankDetails,verifyBankAccount,updateBankDetails,listBanks,login, getProfile, registerOrSignupUser,paystackWebhook, verifyEmail ,resendVerification, forgotPassword,resetPassword} = require('../controllers/authController');
 const {fundTransfer, datapackages,buy,services,datapurchase} = require('../controllers/airtimeController');
 const { sendResponse } = require('../utils/responseHelper');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -55,6 +55,11 @@ router.get('/transactions',authMiddleware, getTransactions);
 router.get('/getBalance',authMiddleware, getBalance);
 
 router.post('/update-social',authMiddleware, usernameupdates);
+
+
+router.post('/apply-coupon',authMiddleware, applyCouponAndUpdatePackage);
+
+
 
 
 
