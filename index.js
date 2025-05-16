@@ -37,29 +37,29 @@ app.use(session({
 // CORS setup
 // const allowedOrigins = [process.env.FRONTEND_URL];
 
-// const allowedOrigins = [
+const allowedOrigins = [
 
-//   'https://www.virashare.io',
-//   'https://virashare.io',
-//   'https://app.virashare.io',
-//   'http://www.virashare.io',
-//   'http://virashare.io',
-//   'http://app.virashare.io',
-//   'http://localhost' 
-// ];
+  'https://www.virashare.io',
+  'https://virashare.io',
+  'https://app.virashare.io',
+  'http://www.virashare.io',
+  'http://virashare.io',
+  'http://app.virashare.io',
+  'http://localhost:3000' 
+];
 
 
-// app.use(cors({
-//   origin: function (origin, callback) {
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   credentials: true,
-// }));
-// app.use(express.json());
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+app.use(express.json());
 
 
 
