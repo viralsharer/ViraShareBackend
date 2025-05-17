@@ -44,8 +44,7 @@ const allowedOrigins = [
   'https://app.virashare.io',
   'http://www.virashare.io',
   'http://virashare.io',
-  'http://app.virashare.io',
-  'http://localhost:3000' 
+  'http://app.virashare.io'
 ];
 
 
