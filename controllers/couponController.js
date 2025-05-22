@@ -155,7 +155,11 @@ exports.bulkCreateCoupons = async (req, res) => {
     const parser = new Parser({ fields });
     const csv = parser.parse(createdCoupons);
 
-    const filePath = path.join(__dirname, `../exports/coupons-${Date.now()}.csv`);
+    const exportDir = path.join(__dirname, '../exports');
+    const filename = `coupons-${Date.now()}.csv`;
+    const filePath = path.join(exportDir, filename);
+
+    // const filePath = path.join(__dirname, `../exports/coupons-${Date.now()}.csv`);
     fs.writeFileSync(filePath, csv);
 
     return sendResponse(res, 201, 'success', 'Coupons created and exported to CSV', {
