@@ -145,21 +145,23 @@ exports.bulkCreateCoupons = async (req, res) => {
     });
   }
 
-  
-
   try {
     const createdCoupons = await Coupon.insertMany(coupons);
 
-    // Prepare CSV
     const fields = ['code', 'expiryDate', 'isActive'];
     const parser = new Parser({ fields });
     const csv = parser.parse(createdCoupons);
 
     const exportDir = path.join(__dirname, '../exports');
+    
+    // Check if directory exists; if not, create it
+    if (!fs.existsSync(exportDir)) {
+      fs.mkdirSync(exportDir, { recursive: true });
+    }
+
     const filename = `coupons-${Date.now()}.csv`;
     const filePath = path.join(exportDir, filename);
 
-    // const filePath = path.join(__dirname, `../exports/coupons-${Date.now()}.csv`);
     fs.writeFileSync(filePath, csv);
 
     return sendResponse(res, 201, 'success', 'Coupons created and exported to CSV', {
