@@ -427,62 +427,142 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-exports.applyCouponAndUpdatePackage  = async (req, res) => {
-  const { packageId,code, amountPaid } = req.body;
-  const now = new Date();
+// exports.applyCouponAndUpdatePackage  = async (req, res) => {
+//   const { packageId,code, amountPaid } = req.body;
+//   const now = new Date();
 
   
-  if ( !packageId || !amountPaid) {
-    return sendResponse(res, 400, 'error', 'Missing required fields', null);
+//   if ( !packageId || !amountPaid) {
+//     return sendResponse(res, 400, 'error', 'Missing required fields', null);
+//   }
+
+//   try {
+//     // Check if package exists
+//  	const userId = req.user.id;
+//   // Validate packageId format
+// if (!mongoose.Types.ObjectId.isValid(packageId)) {
+//   return sendResponse(res, 400, 'error', 'Invalid package ID format', null);
+// }
+//     const packageExists = await Package.findById(packageId);
+//     if (!packageExists) {
+//       return sendResponse(res, 404, 'error', 'Package not found', null);
+//     }
+
+//     let finalAmount = amountPaid;
+
+//     // If coupon code is provided, validate it
+//     let coupon = null;
+//     if (code) {
+//       coupon = await Coupon.findOne({ code, packageId, isActive: true, expiryDate: { $gte: now } });
+//       if (!coupon) {
+//         return sendResponse(res, 400, 'error', 'Invalid or expired coupon', null);
+//       }
+
+//       // Optionally deactivate coupon after use
+//       coupon.isActive = false;
+//       await coupon.save();
+//     }
+
+//     // Update user payment details
+//     const user = await User.findByIdAndUpdate(
+//       userId,
+//       { packageId, amountPaid: finalAmount, isPaid: true },
+//       { new: true }
+//     );
+
+//     if (!user) {
+//       return sendResponse(res, 404, 'error', 'User not found', null);
+//     }
+
+//     return sendResponse(res, 200, 'success', 'User package updated', {
+//       user,
+//       appliedCoupon: coupon || null,
+//       finalAmount
+//     });
+//   } catch (err) {
+//     return sendResponse(res, 500, 'error', err.message, null);
+//   }
+// };
+
+
+exports.applyCouponAndUpdatePackage = async (req, res) => {
+  const { packageId, code, amountPaid } = req.body;
+
+  if (!packageId || !amountPaid) {
+    return sendResponse(res, 400, 'error', 'Missing required fields: packageId and amountPaid are required.', null);
   }
 
+  if (!mongoose.Types.ObjectId.isValid(packageId)) {
+    return sendResponse(res, 400, 'error', 'Invalid package ID format', null);
+  }
+
+  const userId = req.user.id;
+  const now = new Date();
+
   try {
-    // Check if package exists
- 	const userId = req.user.id;
-  // Validate packageId format
-if (!mongoose.Types.ObjectId.isValid(packageId)) {
-  return sendResponse(res, 400, 'error', 'Invalid package ID format', null);
-}
-    const packageExists = await Package.findById(packageId);
-    if (!packageExists) {
+    // 1. Verify package exists
+    const pkg = await Package.findById(packageId);
+    if (!pkg) {
       return sendResponse(res, 404, 'error', 'Package not found', null);
     }
 
     let finalAmount = amountPaid;
+    let appliedCoupon = null;
 
-    // If coupon code is provided, validate it
-    let coupon = null;
+    // 2. If coupon is provided, validate and mark it used
     if (code) {
-      coupon = await Coupon.findOne({ code, packageId, isActive: true, expiryDate: { $gte: now } });
+      const coupon = await Coupon.findOne({
+        code,
+        packageId,
+        isActive: true,
+        used: false,
+        expiryDate: { $gte: now }
+      });
+
       if (!coupon) {
-        return sendResponse(res, 400, 'error', 'Invalid or expired coupon', null);
+        return sendResponse(res, 400, 'error', 'Invalid, used, or expired coupon', null);
       }
 
-      // Optionally deactivate coupon after use
-      coupon.isActive = false;
+      // Mark coupon as used
+      coupon.used = true;
+      coupon.usedBy = userId;
+      coupon.usedAt = new Date();
+      coupon.isActive = false; // Optional redundancy
       await coupon.save();
+
+      appliedCoupon = coupon;
+
+      // Optionally modify finalAmount based on coupon discount (if any logic applies)
+      // finalAmount -= coupon.discountAmount || 0;
     }
 
-    // Update user payment details
-    const user = await User.findByIdAndUpdate(
+    // 3. Update user with payment details
+    const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { packageId, amountPaid: finalAmount, isPaid: true },
+      {
+        packageId,
+        amountPaid: finalAmount,
+        isPaid: true
+      },
       { new: true }
     );
 
-    if (!user) {
+    if (!updatedUser) {
       return sendResponse(res, 404, 'error', 'User not found', null);
     }
 
-    return sendResponse(res, 200, 'success', 'User package updated', {
-      user,
-      appliedCoupon: coupon || null,
+    return sendResponse(res, 200, 'success', 'User package updated successfully', {
+      user: updatedUser,
+      appliedCoupon,
       finalAmount
     });
+
   } catch (err) {
-    return sendResponse(res, 500, 'error', err.message, null);
+    console.error('Apply coupon error:', err);
+    return sendResponse(res, 500, 'error', 'An error occurred while applying coupon', err.message);
   }
 };
+
 
 exports.updateUserPackage = async (req, res) => {
   const { userId, packageId, amountPaid } = req.body;
