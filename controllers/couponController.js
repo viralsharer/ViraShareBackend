@@ -124,42 +124,77 @@ const generateCode = (length = 8) => {
 };
 
 // Bulk create and export coupons
+// exports.bulkCreateCoupons = async (req, res) => {
+//   const { quantity, expiryDate, packageId, codePrefix = '' } = req.body;
+
+//   if (!quantity || !expiryDate || !packageId) {
+//     return sendResponse(res, 400, 'error', 'quantity, expiryDate, and packageId are required', null);
+//   }
+
+//   const pkg = await Package.findById(packageId);
+//   if (!pkg) return sendResponse(res, 404, 'error', 'Package not found', null);
+
+//   const coupons = [];
+//   for (let i = 0; i < quantity; i++) {
+//     coupons.push({
+//       code: codePrefix + generateCode(6),
+//       expiryDate,
+//       packageId,
+//       isActive: true,
+//       used: false,
+//     });
+//   }
+
+//   try {
+//     const createdCoupons = await Coupon.insertMany(coupons);
+
+//     // Prepare CSV
+//     const fields = ['code', 'expiryDate', 'isActive'];
+//     const parser = new Parser({ fields });
+//     const csv = parser.parse(createdCoupons);
+
+//     const filePath = path.join(__dirname, `../exports/coupons-${Date.now()}.csv`);
+//     fs.writeFileSync(filePath, csv);
+
+//     return sendResponse(res, 201, 'success', 'Coupons created and exported to CSV', {
+//       createdCount: createdCoupons.length,
+//       csvPath: filePath
+//     });
+//   } catch (err) {
+//     return sendResponse(res, 500, 'error', 'Failed to create coupons', err);
+//   }
+// };
+
 exports.bulkCreateCoupons = async (req, res) => {
-  const { quantity, expiryDate, packageId, codePrefix = '' } = req.body;
-
-  if (!quantity || !expiryDate || !packageId) {
-    return sendResponse(res, 400, 'error', 'quantity, expiryDate, and packageId are required', null);
-  }
-
-  const pkg = await Package.findById(packageId);
-  if (!pkg) return sendResponse(res, 404, 'error', 'Package not found', null);
-
-  const coupons = [];
-  for (let i = 0; i < quantity; i++) {
-    coupons.push({
-      code: codePrefix + generateCode(6),
-      expiryDate,
-      packageId,
-      isActive: true,
-      used: false,
-    });
-  }
-
   try {
-    const createdCoupons = await Coupon.insertMany(coupons);
+    const coupons = await Coupon.find()
+      .select('code expiryDate isActive packageId')
+      .populate('packageId', 'name')
+      .lean();
 
-    // Prepare CSV
-    const fields = ['code', 'expiryDate', 'isActive'];
+    const formattedCoupons = coupons.map(coupon => ({
+      code: coupon.code,
+      expiryDate: coupon.expiryDate,
+      isActive: coupon.isActive,
+      packageName: coupon.packageId?.name || 'N/A'
+    }));
+
+    const fields = ['code', 'expiryDate', 'isActive', 'packageName'];
     const parser = new Parser({ fields });
-    const csv = parser.parse(createdCoupons);
+    const csv = parser.parse(formattedCoupons);
 
-    const filePath = path.join(__dirname, `../exports/coupons-${Date.now()}.csv`);
+    const exportDir = path.join(__dirname, '../exports');
+    const filename = `coupons-${Date.now()}.csv`;
+    const filePath = path.join(exportDir, filename);
+
+    // Ensure export directory exists
+    if (!fs.existsSync(exportDir)) {
+      fs.mkdirSync(exportDir, { recursive: true });
+    }
+
     fs.writeFileSync(filePath, csv);
 
-    return sendResponse(res, 201, 'success', 'Coupons created and exported to CSV', {
-      createdCount: createdCoupons.length,
-      csvPath: filePath
-    });
+    res.download(filePath); // Sends the file for download
   } catch (err) {
     return sendResponse(res, 500, 'error', 'Failed to create coupons', err);
   }
