@@ -12,5 +12,6 @@ router.delete('/:code',adminMiddleware, couponController.deleteCoupon);
 router.patch('/:code/status', adminMiddleware,couponController.changeCouponStatus);
 router.post('/validate', couponController.validateCoupon);
 
-
+router.post('/bulk-create', couponController.bulkCreateCoupons);
+router.get('/export', couponController.exportCouponsCsv);
 module.exports = router;
