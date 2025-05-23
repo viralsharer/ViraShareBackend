@@ -39,13 +39,13 @@ app.use(session({
 
 const allowedOrigins = [
 
-  // 'https://www.virashare.io',
-  // 'https://virashare.io',
-  // 'https://app.virashare.io',
-  // 'http://www.virashare.io',
-  // 'http://virashare.io',
-  // 'http://app.virashare.io',
-  'http://localhost:3000'
+  'https://www.virashare.io',
+  'https://virashare.io',
+  'https://app.virashare.io',
+  'http://www.virashare.io',
+  'http://virashare.io',
+  'http://app.virashare.io'
+  // 'http://localhost:3000'
 ];
 
 
