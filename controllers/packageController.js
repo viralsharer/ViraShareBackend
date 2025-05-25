@@ -22,7 +22,7 @@ exports.createPackage = async (req, res) => {
 // Get all packages
 exports.getPackages = async (req, res) => {
   try {
-    const packages = await Package.find({ deletedAt: { $exists: false } });
+    const packages = await Package.find({ deleted: { $ne: true } });
     return sendResponse(res, 200, 'success', 'Packages retrieved', packages);
   } catch (err) {
     return sendResponse(res, 500, 'error', err.message, null);
