@@ -37,7 +37,7 @@ const io = new Server(server, {
 });
 
 
-const app = express();
+
 // Session setup
 app.use(session({
     secret: process.env.SESSION_SECRET,
