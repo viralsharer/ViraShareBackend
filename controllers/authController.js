@@ -485,6 +485,84 @@ exports.resetPassword = async (req, res) => {
 // };
 
 
+// exports.applyCouponAndUpdatePackage = async (req, res) => {
+//   const { packageId, code, amountPaid } = req.body;
+
+//   if (!packageId || !amountPaid) {
+//     return sendResponse(res, 400, 'error', 'Missing required fields: packageId and amountPaid are required.', null);
+//   }
+
+//   if (!mongoose.Types.ObjectId.isValid(packageId)) {
+//     return sendResponse(res, 400, 'error', 'Invalid package ID format', null);
+//   }
+
+//   const userId = req.user.id;
+//   const now = new Date();
+
+//   try {
+//     // 1. Verify package exists
+//     const pkg = await Package.findById(packageId);
+//     if (!pkg) {
+//       return sendResponse(res, 404, 'error', 'Package not found', null);
+//     }
+
+//     let finalAmount = amountPaid;
+//     let appliedCoupon = null;
+
+//     // 2. If coupon is provided, validate and mark it used
+//     if (code) {
+//       const coupon = await Coupon.findOne({
+//         code,
+//         packageId,
+//         isActive: true,
+//         used: false,
+//         expiryDate: { $gte: now }
+//       });
+
+//       if (!coupon) {
+//         return sendResponse(res, 400, 'error', 'Invalid, used, or expired coupon', null);
+//       }
+
+//       // Mark coupon as used
+//       coupon.used = true;
+//       coupon.usedBy = userId;
+//       coupon.usedAt = new Date();
+//       coupon.isActive = false; // Optional redundancy
+//       await coupon.save();
+
+//       appliedCoupon = coupon;
+
+//       // Optionally modify finalAmount based on coupon discount (if any logic applies)
+//       // finalAmount -= coupon.discountAmount || 0;
+//     }
+
+//     // 3. Update user with payment details
+//     const updatedUser = await User.findByIdAndUpdate(
+//       userId,
+//       {
+//         packageId,
+//         amountPaid: finalAmount,
+//         isPaid: true
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedUser) {
+//       return sendResponse(res, 404, 'error', 'User not found', null);
+//     }
+
+//     return sendResponse(res, 200, 'success', 'User package updated successfully', {
+//       user: updatedUser,
+//       appliedCoupon,
+//       finalAmount
+//     });
+
+//   } catch (err) {
+//     console.error('Apply coupon error:', err);
+//     return sendResponse(res, 500, 'error', 'An error occurred while applying coupon', err.message);
+//   }
+// };
+
 exports.applyCouponAndUpdatePackage = async (req, res) => {
   const { packageId, code, amountPaid } = req.body;
 
@@ -527,13 +605,12 @@ exports.applyCouponAndUpdatePackage = async (req, res) => {
       coupon.used = true;
       coupon.usedBy = userId;
       coupon.usedAt = new Date();
-      coupon.isActive = false; // Optional redundancy
+      coupon.isActive = false;
       await coupon.save();
 
       appliedCoupon = coupon;
 
-      // Optionally modify finalAmount based on coupon discount (if any logic applies)
-      // finalAmount -= coupon.discountAmount || 0;
+      // Optionally apply discount here
     }
 
     // 3. Update user with payment details
@@ -551,6 +628,19 @@ exports.applyCouponAndUpdatePackage = async (req, res) => {
       return sendResponse(res, 404, 'error', 'User not found', null);
     }
 
+    // 4. Reward referral (if any) ✅
+    if (updatedUser.referral) {
+      const referrer = await User.findById(updatedUser.referral);
+
+      if (referrer) {
+        const referralReward = pkg.referralReward; // 💡 Reward logic
+
+        referrer.mainBalance += referralReward;
+        referrer.referralCount += 1;
+        await referrer.save();
+      }
+    }
+
     return sendResponse(res, 200, 'success', 'User package updated successfully', {
       user: updatedUser,
       appliedCoupon,
@@ -562,6 +652,7 @@ exports.applyCouponAndUpdatePackage = async (req, res) => {
     return sendResponse(res, 500, 'error', 'An error occurred while applying coupon', err.message);
   }
 };
+
 
 
 exports.updateUserPackage = async (req, res) => {
@@ -665,35 +756,35 @@ exports.paystackWebhook = async (req, res) => {
                   await user.save();
                   console.log('User package updated:', { packageId: user.packageId, amountPaid: user.amountPaid });
 
-                  if (user.referredBy) {
-                    const referrer = await User.findById(user.referredBy).session(session);
+                  if (user.referral) {
+                    const referrer = await User.findById(user.referral).session(session);
                     if (referrer) {
-                        const referralReward = packageExists.referalpoint || 0;
-                        
-                        // Credit the referrer
-                        referrer.referralCount += 1;
-                        referrer.mainbalance += referralReward;
-                        await referrer.save({ session });
-                
-                        console.log(`Referrer credited: ${referrer.email}, Amount: ${referralReward}`);
-                
-                        // Create a transaction for the referral bonus
-                        const referralTransaction = new Transaction({
-                            transaction_id: `REF-${new Date().getTime()}-${referrer._id}`, // Unique transaction ID
-                            user_id: referrer._id,  // The referrer gets the reward
-                            reference: `Referral-${user._id}`,  // Reference linking to referred user
-                            amount: referralReward * 100,  // Convert to smallest unit
-                            settled_amount: referralReward * 100,
-                            charges: 0,  // No charges for referral bonus
-                            transaction_type: 'credit',
-                            transaction_services:'referral_bonus',
-                            status: 'success',
-                        });
-                
-                        await referralTransaction.save({ session });
-                        console.log(`Referral transaction saved for ${referrer.email}`);
+                      const referralReward = pkg.referralReward || Math.floor(0.1 * finalAmount); // or define your logic
+
+                      // Update referrer’s balance and referral count
+                      referrer.mainBalance += referralReward;
+                      referrer.referralCount += 1;
+                      await referrer.save();
+
+                      // Log the transaction
+                      const referralTransaction = new Transaction({
+                        transaction_id: `REF-${Date.now()}-${referrer._id}`, // Unique ID
+                        user_id: referrer._id,
+                        reference: `Referral-${updatedUser._id}`, // Who triggered this reward
+                        amount: referralReward * 100, // Store in kobo, cents, etc.
+                        settled_amount: referralReward * 100,
+                        charges: 0,
+                        transaction_type: 'credit',
+                        transaction_services: 'referral_bonus',
+                        status: 'success',
+                      });
+
+                      await referralTransaction.save(); // or `await referralTransaction.save({ session })` if using a session
+
+                      console.log(`Referral transaction saved for ${referrer.email}`);
                     }
-                }
+
+                  }
                 
               }
 

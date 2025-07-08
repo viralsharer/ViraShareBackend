@@ -15,6 +15,26 @@ dotenv.config();
 
 // Connect to Database
 connectDB();
+
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    await axios.get(`https://${process.env.RENDER_DOMAIN}/keep-alive`);
+    console.log('Self-ping sent at', new Date().toLocaleTimeString());
+  } catch (err) {
+    console.error('Self-ping failed:', err.message);
+  }
+});
+const app = express();
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+
 const app = express();
 // Session setup
 app.use(session({
