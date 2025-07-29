@@ -1,19 +1,9 @@
+
+
 const { sendResponse } = require('../utils/responseHelper');
 const axios = require("axios");
 const User = require('../models/User');
 const Transaction = require('../models/transaction');
-
-const SECRET_KEY = "sk_live_KE3Zp9yTpdMwTG8ireB2ajyZEScbQXxASAaIcLbHkko="; // Replace with actual secret key
-
-const puc_key="pk_live_QBbMPm6pe2LONTAKCyT+CizATksJUGjhqlLTobLVEWo=";
-
-
-// const PAYSTACK_SECRET_KEY ="sk_test_4dd611e2ccafd7c35528395028f44548076f2aba";
-
-const PAYSTACK_SECRET_KEY ="sk_live_67a7a1eddc2d3cb68cf18e416eb69bf7aa30b2b4";
-
-
-
 
 
 const purchaseAirtime = async (service_id, service_type, phoneNumber, amount) => {
@@ -21,7 +11,7 @@ const purchaseAirtime = async (service_id, service_type, phoneNumber, amount) =>
     const response = await axios.post(
       "https://enterprise.mobilenig.com/api/v2/services/",
       { service_id, trans_id: Date.now(), service_type, phoneNumber, amount },
-      { headers: { "Content-Type": "application/json", Authorization: `Bearer ${SECRET_KEY}` } }
+      { headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.ASECRET_KEY}` } }
     );
     return response.data;
   } catch (error) {
@@ -110,7 +100,7 @@ const fetchServicePackages = async (service_id, requestType) => {
     const response = await axios.post(
       "https://enterprise.mobilenig.com/api/v2/services/packages",
       { service_id, requestType },
-      { headers: { "Content-Type": "application/json", Authorization: `Bearer ${puc_key}` } }
+      { headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.puc_key}` } }
     );
     return response.data;
   } catch (error) {
@@ -137,7 +127,7 @@ const purchaseData = async (service_id, service_type, phoneNumber, trans_id, cod
     const response = await axios.post(
       "https://enterprise.mobilenig.com/api/v2/services/",
       { service_id, service_type, beneficiary: phoneNumber, trans_id, code, amount },
-      { headers: { "Content-Type": "application/json", Authorization: `Bearer ${SECRET_KEY}` } }
+      { headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.ASECRET_KEY}` } }
     );
     return response.data;
   } catch (error) {
@@ -232,7 +222,7 @@ exports.datapurchase = async (req, res) => {
 //           },
 //           {
 //               headers: {
-//                   Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+//                   Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
 //                   'Content-Type': 'application/json'
 //               }
 //           }
@@ -255,7 +245,7 @@ exports.datapurchase = async (req, res) => {
 //           },
 //           {
 //               headers: {
-//                   Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+//                   Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
 //                   'Content-Type': 'application/json'
 //               }
 //           }
@@ -329,7 +319,7 @@ exports.fundTransfer = async (req, res) => {
           },
           {
               headers: {
-                  Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+                  Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
                   'Content-Type': 'application/json'
               }
           }
@@ -353,7 +343,7 @@ exports.fundTransfer = async (req, res) => {
           },
           {
               headers: {
-                  Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+                  Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
                   'Content-Type': 'application/json'
               }
           }

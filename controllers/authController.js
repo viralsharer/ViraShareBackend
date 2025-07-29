@@ -10,6 +10,7 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const Coupon = require('../models/Coupon'); 
 
+
 const { sendResponse } = require('../utils/responseHelper');
 
 const SECRET_KEY = "sk_live_92c151b59738d38d7ec0624a4b2792bc7f5bdfca"; 
