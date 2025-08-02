@@ -759,10 +759,10 @@ exports.paystackWebhook = async (req, res) => {
                   if (user.referral) {
                     const referrer = await User.findById(user.referral);
                     if (referrer) {
-                      const referralReward = pkg.referralReward || Math.floor(0.1 * finalAmount); // or define your logic
+                      const referralReward = packageExists.referralReward; // or define your logic
 
                       // Update referrer’s balance and referral count
-                      referrer.mainBalance += referralReward;
+                      referrer.mainBalance += referralReward*100;
                       referrer.referralCount += 1;
                       await referrer.save();
 
