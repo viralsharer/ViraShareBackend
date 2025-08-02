@@ -13,7 +13,6 @@ const Coupon = require('../models/Coupon');
 
 const { sendResponse } = require('../utils/responseHelper');
 
-const SECRET_KEY = "sk_live_92c151b59738d38d7ec0624a4b2792bc7f5bdfca"; 
 
 // @desc    Register new user
 // @route   POST /api/auth/signup
@@ -758,7 +757,7 @@ exports.paystackWebhook = async (req, res) => {
                   console.log('User package updated:', { packageId: user.packageId, amountPaid: user.amountPaid });
 
                   if (user.referral) {
-                    const referrer = await User.findById(user.referral).session(session);
+                    const referrer = await User.findById(user.referral);
                     if (referrer) {
                       const referralReward = pkg.referralReward || Math.floor(0.1 * finalAmount); // or define your logic
 
@@ -886,7 +885,7 @@ exports.listBanks = async (req, res) => {
       method: 'get',
       maxBodyLength: Infinity,
       url: 'https://api.paystack.co/bank',
-      headers: { Authorization: `Bearer ${SECRET_KEY}` },
+      headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
     };
 
     const response = await axios(config);
@@ -929,7 +928,7 @@ exports.verifyBankAccount = async (req, res) => {
     const config = {
       method: 'get',
       url: `https://api.paystack.co/bank/resolve?account_number=${account_number}&bank_code=${bank_code}`,
-      headers: { Authorization: `Bearer ${SECRET_KEY}` },
+      headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
     };
 
     const response = await axios(config);
