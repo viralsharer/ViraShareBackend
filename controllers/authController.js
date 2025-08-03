@@ -769,9 +769,9 @@ exports.paystackWebhook = async (req, res) => {
 
                       // Log the transaction
                       const referralTransaction = new Transaction({
-                        transaction_id: `REF-${Date.now()}-${referrer._id}`, // Unique ID
+                        transaction_id: `REF-${Date.now()}-${referrer._name}`, // Unique ID
                         user_id: referrer._id,
-                        reference: `Referral-${updatedUser._id}`, // Who triggered this reward
+                        reference: `Referral-${referrer._name}`, // Who triggered this reward
                         amount: referralReward * 100, // Store in kobo, cents, etc.
                         settled_amount: referralReward * 100,
                         charges: 0,
