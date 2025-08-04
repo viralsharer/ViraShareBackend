@@ -1046,8 +1046,8 @@ exports.getBalance = async (req, res) => {
       message: "Balance fetched successfully",
       user: {
         mainBalance: user.mainBalance || 0,
-        temporaryBalance: user.temporaryBalance || 0
-      }
+        temporaryBalance: user.temporaryBalance || 0,
+        referralCount: user.referralCount || 0      }
     });
   } catch (err) {
     console.error(err.message);
