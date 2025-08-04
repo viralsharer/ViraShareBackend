@@ -633,7 +633,7 @@ exports.applyCouponAndUpdatePackage = async (req, res) => {
       const referrer = await User.findById(updatedUser.referral);
 
       if (referrer) {
-        const referralReward = pkg.referralReward; // 💡 Reward logic
+        const referralReward = pkg.referalpoint; // 💡 Reward logic
 
         referrer.mainBalance += referralReward;
         referrer.referralCount += 1;
@@ -761,7 +761,7 @@ exports.paystackWebhook = async (req, res) => {
                     if (referrer) {
                       // const referralReward = packageExists.referralReward; // or define your logic
                       console.log(packageExists);
-                      const referralReward = Number(packageExists?.referralReward) || 0;
+                      const referralReward = Number(packageExists?.referalpoint) || 0;
                       console.log(referralReward);
                       // Update referrer’s balance and referral count
                       referrer.mainBalance += referralReward*100;
