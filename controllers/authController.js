@@ -760,8 +760,9 @@ exports.paystackWebhook = async (req, res) => {
                     const referrer = await User.findById(user.referral);
                     if (referrer) {
                       // const referralReward = packageExists.referralReward; // or define your logic
+                      console.log(packageExists);
                       const referralReward = Number(packageExists?.referralReward) || 0;
-
+                      console.log(referralReward);
                       // Update referrer’s balance and referral count
                       referrer.mainBalance += referralReward*100;
                       referrer.referralCount = referrer.referralCount  + 1 || 0;
@@ -769,9 +770,9 @@ exports.paystackWebhook = async (req, res) => {
 
                       // Log the transaction
                       const referralTransaction = new Transaction({
-                        transaction_id: `REF-${Date.now()}-${referrer._name}`, // Unique ID
+                        transaction_id: `REF-${Date.now()}-${referrer.name}`, // Unique ID
                         user_id: referrer._id,
-                        reference: `Referral-${referrer._name}`, // Who triggered this reward
+                        reference: `Referral-${referrer.name}`, // Who triggered this reward
                         amount: referralReward * 100, // Store in kobo, cents, etc.
                         settled_amount: referralReward * 100,
                         charges: 0,
